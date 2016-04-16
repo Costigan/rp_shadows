@@ -1,0 +1,13 @@
+C:\git\rp_shadows\src\Shadows2\bin\Debug\Shadows2.exe.config
+C:\git\rp_shadows\src\Shadows2\obj\Debug\Shadows2.csprojResolveAssemblyReference.cache
+C:\git\rp_shadows\src\Shadows2\obj\Debug\Shadows2.Form1.resources
+C:\git\rp_shadows\src\Shadows2\obj\Debug\Shadows2.Properties.Resources.resources
+C:\git\rp_shadows\src\Shadows2\obj\Debug\Shadows2.csproj.GenerateResource.Cache
+C:\git\rp_shadows\src\Shadows2\bin\Debug\Shadows2.exe
+C:\git\rp_shadows\src\Shadows2\bin\Debug\Shadows2.pdb
+C:\git\rp_shadows\src\Shadows2\bin\Debug\BitMiracle.LibTiff.NET.dll
+C:\git\rp_shadows\src\Shadows2\bin\Debug\OpenTK.dll
+C:\git\rp_shadows\src\Shadows2\bin\Debug\BitMiracle.LibTiff.NET.xml
+C:\git\rp_shadows\src\Shadows2\bin\Debug\OpenTK.xml
+C:\git\rp_shadows\src\Shadows2\obj\Debug\Shadows2.exe
+C:\git\rp_shadows\src\Shadows2\obj\Debug\Shadows2.pdb

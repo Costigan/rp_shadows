@@ -1,0 +1,10 @@
+﻿\begindata
+ 
+   KERNELS_TO_LOAD = ( 'leapseconds.ker',
+                       'mgs.tsc',
+                       'generic.bsp',
+                       'mgs.bc',
+                       'earth.bpc',
+                       'mgs.bes'           )
+ 
+   \begintext
