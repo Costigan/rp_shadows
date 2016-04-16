@@ -103,11 +103,13 @@ namespace Shadow.terrain
                     var x = px + walkVec.X * i;
                     var y = py + walkVec.Y * i;
 
-                    var sz = FakeInterpolatedHeightMap(x, y, frameStep, xmax, ymax);
+                    var sz = InterpolatedHeightMap(x, y, frameStep, xmax, ymax);
 
                     var slope = (pz - sz) / (step * (i - pIndex));
                     if (slope > highSlope)
-                    { }  // In shadow.  No ligt to distribute
+                    {
+                        FakeDistributeLight(x, y, 0f, frameStep, xmax, ymax);
+                    }  // In shadow.  No ligt to distribute
                     else if (slope < lowSlope)
                         FakeDistributeLight(x, y, 1f, frameStep, xmax, ymax);
                     else
@@ -155,7 +157,7 @@ namespace Shadow.terrain
         {
             var x1 = (int)Math.Round((x - MinPX) / frameStep);
             var y1 = (int)Math.Round((y - MinPY) / frameStep);
-            if (x1 < 0 || y1 < 0 || x1 >= xmax || x1 >= ymax)  // Do nothing for now
+            if (x1 < 0 || y1 < 0 || x1 >= xmax || y1 >= ymax)  // Do nothing for now
                 return float.MinValue;
             return HeightMap[x1, y1];
         }
@@ -207,7 +209,7 @@ namespace Shadow.terrain
         {
             var x1 = (int)Math.Round((x - MinPX) / frameStep);
             var y1 = (int)Math.Round((y - MinPY) / frameStep);
-            if (x1 < 0 || y1 < 0 || x1 >= xmax || x1 >= ymax)  // Do nothing for now
+            if (x1 < 0 || y1 < 0 || x1 >= xmax || y1 >= ymax)  // Do nothing for now
                 return;
             _shadowBuf[x1, y1] = light;
         }
