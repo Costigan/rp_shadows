@@ -97,7 +97,6 @@ namespace Shadow.terrain
                 var pz = HeightMap[six, siy];  // not interpolated
                 var pIndex = 0;
                 var pzTransformed = px * m.Row0.Y + py * m.Row1.Y + pz * m.Row2.Y + 1f * m.Row3.Y;
-                int ix1 = -1, iy1 = -1;
                 for (var i = 1; i < max; i++)
                 {
                     var x = px + walkVec.X * i;
@@ -108,7 +107,7 @@ namespace Shadow.terrain
                     var slope = (pz - sz) / (step * (i - pIndex));
                     if (slope > highSlope)
                     {
-                        FakeDistributeLight(x, y, 0f, frameStep, xmax, ymax);
+                        //FakeDistributeLight(x, y, 0f, frameStep, xmax, ymax);
                     }  // In shadow.  No ligt to distribute
                     else if (slope < lowSlope)
                         FakeDistributeLight(x, y, 1f, frameStep, xmax, ymax);
@@ -211,7 +210,11 @@ namespace Shadow.terrain
             var y1 = (int)Math.Round((y - MinPY) / frameStep);
             if (x1 < 0 || y1 < 0 || x1 >= xmax || y1 >= ymax)  // Do nothing for now
                 return;
+
+            // This looks pretty good, but it's not right.
             _shadowBuf[x1, y1] = light;
+
+            //_shadowBuf[x1, y1] += light;
         }
 
         private List<Vector3> CalculateStartsV2(CornerId sunCorner, float step)

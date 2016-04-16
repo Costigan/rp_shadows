@@ -31,6 +31,8 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.open20X20ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.open100X100ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.open500X500ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.open1000X1000ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -46,8 +48,6 @@
             this.trackAzimuth = new System.Windows.Forms.TrackBar();
             this.tbAzimuth = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.open20X20ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.open100X100ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel2.SuspendLayout();
@@ -86,6 +86,20 @@
             this.openToolStripMenuItem.Text = "&Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
+            // open20X20ToolStripMenuItem
+            // 
+            this.open20X20ToolStripMenuItem.Name = "open20X20ToolStripMenuItem";
+            this.open20X20ToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.open20X20ToolStripMenuItem.Text = "Open 20 x 20";
+            this.open20X20ToolStripMenuItem.Click += new System.EventHandler(this.open20X20ToolStripMenuItem_Click);
+            // 
+            // open100X100ToolStripMenuItem
+            // 
+            this.open100X100ToolStripMenuItem.Name = "open100X100ToolStripMenuItem";
+            this.open100X100ToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.open100X100ToolStripMenuItem.Text = "Open 100 x 100";
+            this.open100X100ToolStripMenuItem.Click += new System.EventHandler(this.open100X100ToolStripMenuItem_Click);
+            // 
             // open500X500ToolStripMenuItem
             // 
             this.open500X500ToolStripMenuItem.Name = "open500X500ToolStripMenuItem";
@@ -118,6 +132,8 @@
             // 
             // autoUpdateAfterAzElChangeToolStripMenuItem
             // 
+            this.autoUpdateAfterAzElChangeToolStripMenuItem.Checked = true;
+            this.autoUpdateAfterAzElChangeToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.autoUpdateAfterAzElChangeToolStripMenuItem.Name = "autoUpdateAfterAzElChangeToolStripMenuItem";
             this.autoUpdateAfterAzElChangeToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
             this.autoUpdateAfterAzElChangeToolStripMenuItem.Text = "Auto Update after Az/El change";
@@ -223,20 +239,6 @@
             this.label2.TabIndex = 1;
             this.label2.Text = "Az / El";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // open20X20ToolStripMenuItem
-            // 
-            this.open20X20ToolStripMenuItem.Name = "open20X20ToolStripMenuItem";
-            this.open20X20ToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
-            this.open20X20ToolStripMenuItem.Text = "Open 20 x 20";
-            this.open20X20ToolStripMenuItem.Click += new System.EventHandler(this.open20X20ToolStripMenuItem_Click);
-            // 
-            // open100X100ToolStripMenuItem
-            // 
-            this.open100X100ToolStripMenuItem.Name = "open100X100ToolStripMenuItem";
-            this.open100X100ToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
-            this.open100X100ToolStripMenuItem.Text = "Open 100 x 100";
-            this.open100X100ToolStripMenuItem.Click += new System.EventHandler(this.open100X100ToolStripMenuItem_Click);
             // 
             // Form1
             // 
