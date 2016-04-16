@@ -208,6 +208,13 @@ namespace Shadows2
             autoUpdateAfterAzElChangeToolStripMenuItem.Checked = !autoUpdateAfterAzElChangeToolStripMenuItem.Checked;
         }
 
+        private void singleRayToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            singleRayToolStripMenuItem.Checked = !singleRayToolStripMenuItem.Checked;
+            if (TheTerrain != null)
+                TheTerrain.SingleRay = singleRayToolStripMenuItem.Checked;
+        }
+
         void UpdateToSun(Vector3d v)
         {
             if (TheTerrain == null) return;

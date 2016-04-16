@@ -48,6 +48,7 @@
             this.trackAzimuth = new System.Windows.Forms.TrackBar();
             this.tbAzimuth = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.singleRayToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel2.SuspendLayout();
@@ -118,7 +119,8 @@
             // 
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.renderHeightFieldToolStripMenuItem,
-            this.autoUpdateAfterAzElChangeToolStripMenuItem});
+            this.autoUpdateAfterAzElChangeToolStripMenuItem,
+            this.singleRayToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "&View";
@@ -240,6 +242,13 @@
             this.label2.Text = "Az / El";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // singleRayToolStripMenuItem
+            // 
+            this.singleRayToolStripMenuItem.Name = "singleRayToolStripMenuItem";
+            this.singleRayToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.singleRayToolStripMenuItem.Text = "Single Ray";
+            this.singleRayToolStripMenuItem.Click += new System.EventHandler(this.singleRayToolStripMenuItem_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -287,6 +296,7 @@
         private System.Windows.Forms.ToolStripMenuItem autoUpdateAfterAzElChangeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem open20X20ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem open100X100ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem singleRayToolStripMenuItem;
     }
 }
 

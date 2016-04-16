@@ -26,6 +26,8 @@ namespace Shadow.terrain
         public int Height => HeightMap != null ? HeightMap.GetLength(1) : 0;
         public float GridResolution => (MaxPX - MinPX) / Width;
 
+        bool debugFlag = false;
+
         public enum CornerId
         {
             PP,
@@ -53,9 +55,8 @@ namespace Shadow.terrain
         public void UpdateToSunV3(Vector3d sun1)
         {
             var gridResolution = GridResolution;
-            var step = 0.75f * gridResolution; // less than the resolution of the grid
+            var step = 1f * gridResolution; // was 0.75 of the resolution of the grid
             var sunPosVec = new Vector3((float)sun1.X, (float)sun1.Y, (float)sun1.Z);
-            var sunCorner = GetCorner(sunPosVec);
 
             var ixmax = HeightMap.GetLength(0);
             var iymax = HeightMap.GetLength(1);
@@ -77,12 +78,15 @@ namespace Shadow.terrain
             walkVec.Z = 0f;
             walkVec = walkVec.Normalized() * step;
             //Console.WriteLine(@"walkVec={0}", walkVec);
-            var starts = CalculateStartsV2(sunCorner, step);
+            var starts = CalculateStartsV3(sunPosVec, gridResolution);
+            //if (SingleRay)
+            //    starts = new List<Vector3> { starts[(int)((starts.Count - 1) * RayFraction)] };
             if (SingleRay)
-                starts = new List<Vector3> { starts[(int)((starts.Count - 1) * RayFraction)] };
+                starts = starts.Take(3).ToList();
 
             Array.Clear(ShadowBuf, 0, ShadowBuf.Length);
-            starts.AsParallel().ForAll(s => //starts.ForEach(s =>
+            starts.ForEach(s =>
+            //starts.AsParallel().ForAll(s => 
             {
                 var xmax = Width;  // Width of heightmap
                 var ymax = Height;
@@ -110,12 +114,12 @@ namespace Shadow.terrain
                         //FakeDistributeLight(x, y, 0f, frameStep, xmax, ymax);
                     }  // In shadow.  No ligt to distribute
                     else if (slope < lowSlope)
-                        FakeDistributeLight(x, y, 1f, frameStep, xmax, ymax);
+                        DistributeLight(x, y, 1f, frameStep, xmax, ymax);
                     else
                     {
                         var f = (slope - lowSlope) / deltaSlope;
                         var f1 = 1f - f;
-                        FakeDistributeLight(x, y, f1, frameStep, xmax, ymax);
+                        DistributeLight(x, y, f1, frameStep, xmax, ymax);
                     }
                     var szTransformed = x * m.Row0.Y + y * m.Row1.Y + sz * m.Row2.Y + 1f * m.Row3.Y;
                     if (!(szTransformed > pzTransformed))
@@ -163,37 +167,62 @@ namespace Shadow.terrain
 
         void DistributeLight(float x, float y, float light, float frameStep, int xmax, int ymax)
         {
-            var x1 = (int)((x - MinPX) / frameStep);
-            var y1 = (int)((y - MinPY) / frameStep);
-            var x2 = x1 + 1;
-            var y2 = y1 + 1;
-            var x3 = x1 - 1;
-            var y3 = y1 - 1;
+            // Round x,y to the nearest midpoint
+            var rx = (float)(Math.Round(x - 0.5d) + 0.5d);
+            var ry = (float)(Math.Round(y - 0.5d) + 0.5d);
 
-            if (x3 >= 0)
-            {
-                if (y3 >= 0)
-                    DistributeLight(x, y, x3, y3);
-                DistributeLight(x, y, x3, y1);
-                if (y2 < ymax)
-                    DistributeLight(x, y, x3, y2);
-            }
-            if (y3 >= 0)
-                DistributeLight(x, y, x1, y3);
-            DistributeLight(x, y, x1, y1);
-            if (y2 < ymax)
-                DistributeLight(x, y, x1, y2);
-            if (x2 < xmax)
-            {
-                if (y3 >= 0)
-                    DistributeLight(x, y, x2, y3);
-                DistributeLight(x, y, x2, y1);
-                if (y2 < ymax)
-                    DistributeLight(x, y, x2, y2);
-            }
+            var ix = (int)rx;
+            var iy = (int)ry;
+
+            if (ix + 2 > xmax || iy + 2 > ymax) return;  // Not right, but safety for now
+
+            //if (ix == 100 && iy == 100)
+            //{
+            //    debugFlag = true;
+            //    Console.WriteLine(@"light={0}", light);
+            //}
+            //var sum = 0f;
+
+            // above,left (minus, minus)
+            var area = (0.5f + rx - x) * (0.5f + ry - y);
+            var lightIncrement = Math.Abs(light * area);
+            if (debugFlag)
+                Console.WriteLine(@"  {0}", lightIncrement);
+            _shadowBuf[ix, iy] += lightIncrement;
+            //sum += area;
+
+            // above, right
+            area = (0.5f - rx + x) * (0.5f + ry - y);
+            lightIncrement = Math.Abs(light * area);
+            if (debugFlag)
+                Console.WriteLine(@"  {0}", lightIncrement);
+            _shadowBuf[ix + 1, iy] += lightIncrement;
+            //sum += area;
+
+            //below,left
+            area = (0.5f + rx - x) * (0.5f - ry + y);
+            lightIncrement = Math.Abs(light * area);
+            if (debugFlag)
+                Console.WriteLine(@"  {0}", lightIncrement);
+            _shadowBuf[ix, iy + 1] += lightIncrement;
+           // sum += area;
+
+            //below,right
+            area = (0.5f - rx + x) * (0.5f - ry + y);
+            lightIncrement = Math.Abs(light * area);
+            if (debugFlag)
+                Console.WriteLine(@"  {0}", lightIncrement);
+            _shadowBuf[ix + 1, iy + 1] += lightIncrement;
+            //sum += area;
+
+            //if (debugFlag)
+            //{
+            //    debugFlag = false;
+            //    Console.WriteLine(@"Done.  sum={0}", sum);
+            //}
         }
 
-        void DistributeLight(float x, float y, int gridx, int gridy)
+        void DistributeLight(float light, float x, float y, int gridx, int gridy)
         {
             var dx = x - gridx;
             if (dx < 0f) dx = -dx;
@@ -201,7 +230,10 @@ namespace Shadow.terrain
             var dy = y - gridy;
             if (dy < 0f) dy = -dy;
             if (dy > 0.5f) return;
-            _shadowBuf[gridx, gridy] += (1f - dx) * (1f - dy);
+            var lightIncrement = (1f - dx) * (1f - dy) * light;
+            if(debugFlag)
+                Console.WriteLine(@"  {0}", lightIncrement);
+            _shadowBuf[gridx, gridy] += lightIncrement;
         }
 
         void FakeDistributeLight(float x, float y, float light, float frameStep, int xmax, int ymax)
@@ -212,9 +244,9 @@ namespace Shadow.terrain
                 return;
 
             // This looks pretty good, but it's not right.
-            _shadowBuf[x1, y1] = light;
+            //_shadowBuf[x1, y1] = light;
 
-            //_shadowBuf[x1, y1] += light;
+            _shadowBuf[x1, y1] += light;
         }
 
         private List<Vector3> CalculateStartsV2(CornerId sunCorner, float step)
@@ -302,6 +334,116 @@ namespace Shadow.terrain
                             p.Y -= step;
                         }
                         //p = Copy(CornerNP);
+                        p = new Vector3(xmin, ymin, 0f);
+                        while (p.X < xmax)
+                        {
+                            starts.Add(Copy(p));
+                            //CheckPosition(p);
+                            p.X += step;
+                        }
+                    }
+                    break;
+            }
+            return starts;
+        }
+
+        private List<Vector3> CalculateStartsV3(Vector3 sunPosVec, float resolution)
+        {
+            var sunCorner = GetCorner(sunPosVec);
+            var flat = new Vector2(sunPosVec.X, sunPosVec.Y);
+            flat.Normalize();
+
+            var gridResolution = GridResolution;
+            var xmin = MinPX;
+            var xmax = xmin + (HeightMap.GetLength(0) - 1) * gridResolution;
+            var ymin = MinPY;
+            var ymax = ymin + (HeightMap.GetLength(1) - 1) * gridResolution;
+
+            //step = 500f*step; // this is for testing only
+            //SetCorners();
+            var starts = new List<Vector3>();
+            float step;
+            switch (sunCorner)
+            {
+                case CornerId.PP:
+                    {
+                        //var p = Copy(CornerNP);
+                        var p = new Vector3(xmin, ymin, 0f);
+                        step = flat.Y == 0f ? float.MaxValue : Math.Abs(1f / flat.Y); 
+                        while (p.X < xmax)
+                        {
+                            starts.Add(Copy(p));
+                            //CheckPosition(p);
+                            p.X += step;
+                        }
+                        //p = Copy(CornerPP);
+                        p = new Vector3(xmax, ymin, 0f);
+                        step = flat.X == 0f ? float.MaxValue : Math.Abs(1f / flat.X);
+                        while (p.Y < ymax)
+                        {
+                            starts.Add(Copy(p));
+                            //CheckPosition(p);
+                            p.Y += step;
+                        }
+                    }
+                    break;
+                case CornerId.PN:
+                    {
+                        //var p = Copy(CornerNN);
+                        var p = new Vector3(xmin, ymax, 0f);
+                        step = flat.Y == 0f ? float.MaxValue : Math.Abs(1f / flat.Y);
+                        while (p.X < xmax)
+                        {
+                            starts.Add(Copy(p));
+                            //CheckPosition(p);
+                            p.X += step;
+                        }
+                        step = flat.X == 0f ? float.MaxValue : Math.Abs(1f / flat.X);
+                        //p = Copy(CornerPN);
+                        p = new Vector3(xmax, ymax, 0f);
+                        while (p.Y > ymin)
+                        {
+                            starts.Add(Copy(p));
+                            //CheckPosition(p);
+                            p.Y -= step;
+                        }
+                    }
+                    break;
+                case CornerId.NN:
+                    {
+                        //var p = Copy(CornerNP);
+                        var p = new Vector3(xmin, ymin, 0f);
+                        step = flat.X == 0f ? float.MaxValue : Math.Abs(1f / flat.X);
+                        while (p.Y < ymax)
+                        {
+                            starts.Add(Copy(p));
+                            //CheckPosition(p);
+                            p.Y += step;
+                        }
+                        step = flat.Y == 0f ? float.MaxValue : Math.Abs(1f / flat.Y);
+                        //p = Copy(CornerNN);
+                        p = new Vector3(xmin, ymax, 0f);
+                        while (p.X < xmax)
+                        {
+                            starts.Add(Copy(p));
+                            //CheckPosition(p);
+                            p.X += step;
+                        }
+                    }
+                    break;
+                case CornerId.NP:
+                    {
+                        //var p = Copy(CornerNN);
+                        var p = new Vector3(xmin, ymax, 0f);
+                        step = flat.X == 0f ? float.MaxValue : Math.Abs(1f / flat.X);
+                        while (p.Y > ymin)
+                        {
+                            starts.Add(Copy(p));
+                            //CheckPosition(p);
+                            p.Y -= step;
+                        }
+                        //p = Copy(CornerNP);
+                        step = flat.Y == 0f ? float.MaxValue : Math.Abs(1f / flat.Y);
                         p = new Vector3(xmin, ymin, 0f);
                         while (p.X < xmax)
                         {
