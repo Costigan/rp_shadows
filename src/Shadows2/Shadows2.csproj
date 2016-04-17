@@ -65,6 +65,7 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="math\Extensions.cs" />
     <Compile Include="math\MathHelper.cs" />
     <Compile Include="math\Matrix3.cs" />
     <Compile Include="math\Matrix3d.cs" />
@@ -72,6 +73,7 @@
     <Compile Include="math\Matrix4d.cs" />
     <Compile Include="math\Quaternion.cs" />
     <Compile Include="math\Quaterniond.cs" />
+    <Compile Include="math\TriangleClipper.cs" />
     <Compile Include="math\Vector2.cs" />
     <Compile Include="math\Vector2d.cs" />
     <Compile Include="math\Vector3.cs" />
@@ -81,6 +83,12 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="terrain\Terrain.cs" />
+    <Compile Include="TriangleTests.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TriangleTests.Designer.cs">
+      <DependentUpon>TriangleTests.cs</DependentUpon>
+    </Compile>
     <Compile Include="viz\BoundingBox.cs" />
     <Compile Include="viz\Ray.cs" />
     <EmbeddedResource Include="Form1.resx">
@@ -95,6 +103,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="TriangleTests.resx">
+      <DependentUpon>TriangleTests.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
