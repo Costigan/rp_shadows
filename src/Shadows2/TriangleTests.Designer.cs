@@ -38,6 +38,8 @@
             this.lblTris = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.lblArea = new System.Windows.Forms.Label();
+            this.lblFractionalArea = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // panel1
@@ -136,11 +138,31 @@
             this.lblArea.Size = new System.Drawing.Size(73, 13);
             this.lblArea.TabIndex = 5;
             // 
+            // lblFractionalArea
+            // 
+            this.lblFractionalArea.BackColor = System.Drawing.Color.White;
+            this.lblFractionalArea.Location = new System.Drawing.Point(54, 336);
+            this.lblFractionalArea.Name = "lblFractionalArea";
+            this.lblFractionalArea.Size = new System.Drawing.Size(73, 13);
+            this.lblFractionalArea.TabIndex = 6;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(17, 323);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(81, 13);
+            this.label4.TabIndex = 7;
+            this.label4.Text = "Fractional Area:";
+            this.label4.TextAlign = System.Drawing.ContentAlignment.TopRight;
+            // 
             // TriangleTests
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(859, 697);
+            this.Controls.Add(this.lblFractionalArea);
+            this.Controls.Add(this.label4);
             this.Controls.Add(this.lblArea);
             this.Controls.Add(this.lblTris);
             this.Controls.Add(this.label3);
@@ -170,5 +192,7 @@
         private System.Windows.Forms.Label lblTris;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label lblArea;
+        private System.Windows.Forms.Label lblFractionalArea;
+        private System.Windows.Forms.Label label4;
     }
 }

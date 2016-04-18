@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shadows2.math
+namespace Shadows.math
 {
     public struct Triangle
     {
@@ -56,13 +56,6 @@ namespace Shadows2.math
     public class TriangleClipper
     {
         public List<LabeledTriangle> Records = new List<LabeledTriangle>();
-
-        public Action<Triangle, RectangleF> Handler = null;
-
-        public TriangleClipper()
-        {
-            Handler = (t, r) => Records.Add(new LabeledTriangle { Label = "Handle", Triangle = t });
-        }
 
         public void AddLight(Triangle t, RectangleF r)
         {
@@ -249,6 +242,11 @@ namespace Shadows2.math
             }
         }
 
+        public virtual void Handler(Triangle t, RectangleF r)
+        {
+            Records.Add(new LabeledTriangle { Label = "Handle", Triangle = t });
+        }
+
         public PointF ClipLineVertical(PointF a, PointF b, float sideX)
         {
             var slope = (b.Y - a.Y) / (b.X - a.X);
@@ -258,7 +256,7 @@ namespace Shadows2.math
 
         public PointF ClipLineHorizontal(PointF a, PointF b, float sideY)
         {
-            var slope =  (b.X - a.X) / (b.Y - a.Y);
+            var slope = (b.X - a.X) / (b.Y - a.Y);
             var sideX = a.X + slope * (sideY - a.Y);
             return new PointF(sideX, sideY);
         }
@@ -281,6 +279,47 @@ namespace Shadows2.math
         void Record(string label, Triangle t)
         {
             Records.Add(new LabeledTriangle { Label = label, Triangle = t });
+        }
+    }
+
+    public class LightingTriangleClipper : TriangleClipper
+    {
+        public PointF toP1;
+        public PointF toP2;
+        public PointF toP3;
+        public PointF toP4;
+        public float GridResolution;
+        public int Width;
+        public int Height;
+        public float HalfSun;
+        public int GridCellX;
+        public int GridCellY;
+        public float[,] ShadowArray;
+
+        public void AddLight(Triangle t, RectangleF r, int ix, int iy, float halfSun)
+        {
+            GridCellX = ix;
+            GridCellY = iy;
+            HalfSun = halfSun;
+            //if (GridCellX == 100 && GridCellY == 100)
+            //{
+            //    Console.WriteLine(@"r={0}", r);
+            //}
+            ClipLeft(t, r);
+        }
+
+        public override void Handler(Triangle t, RectangleF r)
+        {
+            /*
+            if (GridCellX == 100 && GridCellY == 100)
+            {
+                Console.WriteLine(@"r={0}", r);
+                Console.WriteLine(@"  t={0} currentValue={1}", t, ShadowArray[GridCellX, GridCellY]);
+                Console.WriteLine(@"  HalfSun={0} t.Area={1}", HalfSun, t.Area);
+                Console.WriteLine(@"  incrementedValue={0}", ShadowArray[GridCellX, GridCellY] + HalfSun * t.Area);
+            }
+            */
+            ShadowArray[GridCellX, GridCellY] += HalfSun * t.Area;
         }
     }
 }

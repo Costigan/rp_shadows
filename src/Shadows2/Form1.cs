@@ -153,6 +153,14 @@ namespace Shadows2
             ShowBitmap(TheTerrain.HeightFieldToBitmap(Rendering));
         }
 
+        private void open400X400ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var filename = @"C:\git\rp_shadows\data\synthetic-lunar-patch.tif";
+            LoadFileToHeightField(filename);
+            TheTerrain = SubsetHeightField(TheTerrain, new Rectangle(0, 0, 400, 400));
+            ShowBitmap(TheTerrain.HeightFieldToBitmap(Rendering));
+        }
+
         private void open500X500ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var filename = @"C:\git\rp_shadows\data\synthetic-lunar-patch.tif";
@@ -215,10 +223,150 @@ namespace Shadows2
                 TheTerrain.SingleRay = singleRayToolStripMenuItem.Checked;
         }
 
+        private void synthesize500X500ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var rectangle = new Rectangle { Width = 500, Height = 500 };
+            var t = new Terrain
+            {
+                HeightMap = new float[rectangle.Width, rectangle.Height],
+                MinPX = 0f,
+                MaxPX = 500f,
+                MinPY = 0f,
+                MaxPY = 500f
+            };
+            SyntheticHeightMap(t);
+            float maxz = float.MinValue;
+            float minz = float.MaxValue;
+            var heightMap = t.HeightMap;
+            for (var i = 0; i < rectangle.Width; i++)
+                for (var j = 0; j < rectangle.Height; j++)
+                {
+                    var v = heightMap[i, j];
+                    if (v > maxz) maxz = v;
+                    if (v < minz) minz = v;
+                }
+            t.Box = new BoundingBox(-250f, 250f, -250f, 250f, 0f, maxz - minz);
+            t.MinPZ = minz;
+            t.MaxPZ = maxz;
+            TheTerrain = t;
+            ShowBitmap(TheTerrain.HeightFieldToBitmap(Rendering)); 
+        }
+
+        void SyntheticHeightMap(Terrain terrain)
+        {
+            var a = terrain.HeightMap;
+            Array.Clear(a, 0, a.GetLength(0) * a.GetLength(1));
+
+            LowMound(a, 20f);
+            CrinkleHeight(a, 2f);
+            FakeCraters(a, 10, terrain.MaxPX / 10f, -10f, new RectangleF(terrain.MinPX,terrain.MinPY,terrain.MaxPX-terrain.MinPX,terrain.MaxPY-terrain.MinPY));
+            ScatterRocks(a, 500, +40f, new RectangleF(terrain.MinPX, terrain.MinPY, terrain.MaxPX - terrain.MinPX, terrain.MaxPY - terrain.MinPY));
+        }
+
+        private void LowMound(float[,] a, float v)
+        {
+            
+        }
+
+        void CrinkleHeight(float[,] a, float range)
+        {
+            var width = a.GetLength(0);
+            var height = a.GetLength(1);
+            var r = new Random();
+            for (var ix=0;ix< width;ix++)
+                for (var iy=0;iy< height;iy++)
+                    a[ix, iy] += (float)r.NextDouble()*range;
+        }
+
+        void FakeCraters(float[,] a, int count, float maxRadius, float depth, RectangleF rect)
+        {
+            var width = a.GetLength(0);
+            var height = a.GetLength(1);
+            var r = new Random();
+            for (var i=0;i< count;i++)
+            {
+                var radius = (float)r.NextDouble() * maxRadius;
+                var center = new PointF((float)r.NextDouble() * rect.Width, (float)r.NextDouble() * rect.Height);
+                for (var x = center.X - radius; x < center.X + radius; x += 1f)
+                    for (var y = center.Y - radius; y < center.Y + radius; y += 1f)
+                    {
+                        var ix = (int)x;
+                        var iy = (int)y;
+                        if (ix < 0 || iy < 0 || ix >= width || iy >= height)
+                            continue;
+                        var p = new PointF(x, y);
+                        if (p.Distance(center) < radius)
+                            a[ix, iy] += depth;
+                    }
+            }
+        }
+
+        void ScatterRocks(float[,] a, int count, float maxHeight, RectangleF rect)
+        {
+            var width = a.GetLength(0);
+            var height = a.GetLength(1);
+            var r = new Random();
+            for (var i = 0; i < count; i++)
+            {
+                var rockHeight = (float)r.NextDouble() * maxHeight;
+                var rockRadius = (int)((float)r.NextDouble() * 3f);
+                var center = new Point((int)((float)r.NextDouble() * rect.Width), (int)((float)r.NextDouble() * rect.Height));
+                for (var ix = center.X - rockRadius; ix < center.X + rockRadius; ix += 1)
+                    for (var iy = center.Y - rockRadius; iy < center.Y + rockRadius; iy += 1)
+                    {
+                        if (ix < 0 || iy < 0 || ix >= width || iy >= height)
+                            continue;
+                        a[ix, iy] += rockHeight;
+                    }
+            }
+        }
+
+        private void trackAzimuth_MouseUp(object sender, MouseEventArgs e)
+        {
+            UpdateToAzimuthAndElevation();
+        }
+
+        private void trackElevation_MouseUp(object sender, MouseEventArgs e)
+        {
+            UpdateToAzimuthAndElevation();
+        }
+
+        private void tbScale_ValueChanged(object sender, EventArgs e)
+        {
+            pictureBox1.Size = new Size(tbScale.Value*500, tbScale.Value*500);
+        }
+
+        private void tbSunRadius_TextChanged(object sender, EventArgs e)
+        {
+            double r;
+            tbSunRadius.ForeColor = double.TryParse(tbSunRadius.Text, out r) ? Color.Black : Color.Red;
+        }
+
         void UpdateToSun(Vector3d v)
         {
             if (TheTerrain == null) return;
-            TheTerrain.UpdateToSunV3(v);
+            TheTerrain.Clear();
+
+            if (!cbRaycastMulti.Checked)
+            {
+                TheTerrain.UpdateToSunV3(v);
+            }
+            else
+            {
+                double sunRadiusDeg;
+                if (!double.TryParse(tbSunRadius.Text, out sunRadiusDeg)) return;
+                TheTerrain.UpdateToSunV3(v, 0.5f);
+                var axis = new Vector3d(0f, 0f, 1f);
+                var angle = (sunRadiusDeg * Math.PI / 180d);
+                var v0 = new Vector4d(v);
+                var m1 = Matrix4d.CreateFromAxisAngle(axis, angle);
+                var v1 = Vector4d.Transform(v0, m1);
+                var m2 = Matrix4d.CreateFromAxisAngle(axis, -angle);
+                var v2 = Vector4d.Transform(v0, m2);
+                TheTerrain.UpdateToSunV3(new Vector3d(v1), 0.25f, 0f);
+                TheTerrain.UpdateToSunV3(new Vector3d(v2), 0.25f, 0f);
+            }
+
             ShowBitmap(TheTerrain.ShadowBufferToScaledImageV4(Rendering));
         }
 

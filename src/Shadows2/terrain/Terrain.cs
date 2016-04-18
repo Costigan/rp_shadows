@@ -48,11 +48,16 @@ namespace Shadow.terrain
             return new Vector3(f.X, f.Y, 0f);
         }
 
+        public void Clear()
+        {
+            Array.Clear(ShadowBuf, 0, ShadowBuf.Length);
+        }
+
         /// <summary>
         /// This version uses bilinear interpolation
         /// </summary>
         /// <param name="sun1"></param>
-        public void UpdateToSunV3(Vector3d sun1)
+        public void UpdateToSunV3(Vector3d sun1, float sunFraction = 1f, float sunHalfAngle = (float)(0.25d * Math.PI / 180d))
         {
             var gridResolution = GridResolution;
             var step = 1f * gridResolution; // was 0.75 of the resolution of the grid
@@ -68,70 +73,81 @@ namespace Shadow.terrain
             var m = Matrix4.LookAt(sunPosVec, origin, up);
 
             var sunXY = Math.Sqrt(sunPosVec.X * sunPosVec.X + sunPosVec.Y * sunPosVec.Y);
-            var sunAngle = Math.Atan2(sunPosVec.Z, sunXY);
-            const float sunHalfAngle = (float)(0.25d * Math.PI / 180d);
-            var highSlope = (float)Math.Tan(sunAngle + sunHalfAngle);
-            var lowSlope = (float)Math.Tan(sunAngle - sunHalfAngle);
+            //var sunAngle = Math.Atan2(sunPosVec.Z, sunXY);
+            //var highSlope = (float)Math.Tan(sunAngle + sunHalfAngle);
+            //var lowSlope = (float)Math.Tan(sunAngle - sunHalfAngle);
+
+            var highSlope = (float)Math.Tan(sunHalfAngle);
+            var lowSlope = -highSlope;
+
             var deltaSlope = highSlope - lowSlope;
 
             var walkVec = -sunPosVec;
             walkVec.Z = 0f;
             walkVec = walkVec.Normalized() * step;
-            //Console.WriteLine(@"walkVec={0}", walkVec);
+
+            // Calculate offsets to get the corners of the lit square
+            var toForward = walkVec / 2f;
+            var toRight = new Vector3(toForward.Y, -toForward.X, 0f);
+            var toP1 = toForward + toRight;
+            var toP2 = -toForward + toRight;
+            var toP3 = -toForward - toRight;
+            var toP4 = toForward - toRight;
+
             var starts = CalculateStartsV3(sunPosVec, gridResolution);
             //if (SingleRay)
             //    starts = new List<Vector3> { starts[(int)((starts.Count - 1) * RayFraction)] };
             if (SingleRay)
                 starts = starts.Take(3).ToList();
 
-            Array.Clear(ShadowBuf, 0, ShadowBuf.Length);
             starts.ForEach(s =>
             //starts.AsParallel().ForAll(s => 
             {
-                var xmax = Width;  // Width of heightmap
-                var ymax = Height;
-                var frameStep = gridResolution;
+                var resolution = gridResolution;
+                var clipper = new LightingTriangleClipper();
+                clipper.GridResolution = resolution;
+                clipper.toP1 = new PointF(toP1.X, toP1.Y);
+                clipper.toP2 = new PointF(toP2.X, toP2.Y);
+                clipper.toP3 = new PointF(toP3.X, toP3.Y);
+                clipper.toP4 = new PointF(toP4.X, toP4.Y);
+                clipper.Width = Width;
+                clipper.Height = Height;
+                clipper.ShadowArray = _shadowBuf;
+
                 var max = ixmax + iymax;
-                var six = (int)Math.Round((s.X - MinPX) / frameStep);
-                var siy = (int)Math.Round((s.Y - MinPY) / frameStep);
+                var six = (int)Math.Round((s.X - MinPX) / resolution);
+                var siy = (int)Math.Round((s.Y - MinPY) / resolution);
                 if (six < 0 || six >= ixmax || siy < 0 || siy >= iymax)
                     throw new Exception(@"start is out of bounds");
-                var px = s.X;
-                var py = s.Y;
+                var startX = s.X;
+                var startY = s.Y;
                 var pz = HeightMap[six, siy];  // not interpolated
-                var pIndex = 0;
-                var pzTransformed = px * m.Row0.Y + py * m.Row1.Y + pz * m.Row2.Y + 1f * m.Row3.Y;
+                var lastHighestZIndex = 0;
+                var lastZTransformed = startX * m.Row0.Y + startY * m.Row1.Y + pz * m.Row2.Y + 1f * m.Row3.Y;
                 for (var i = 1; i < max; i++)
                 {
-                    var x = px + walkVec.X * i;
-                    var y = py + walkVec.Y * i;
+                    var x = startX + walkVec.X * i;
+                    var y = startY + walkVec.Y * i;
+                    var z = InterpolatedHeightMap(x, y, resolution, clipper.Width, clipper.Height);
+                    var nextZTransformed = x * m.Row0.Y + y * m.Row1.Y + z * m.Row2.Y + 1f * m.Row3.Y;
 
-                    var sz = InterpolatedHeightMap(x, y, frameStep, xmax, ymax);
-
-                    var slope = (pz - sz) / (step * (i - pIndex));
-                    if (slope > highSlope)
+                    var nextSlope = (nextZTransformed - lastZTransformed) / (4f* step * (i - lastHighestZIndex)); // Debug: 2f shouldn't be here
+                    if (nextSlope > highSlope)  // In shadow.  No light to distribute
                     {
                         //FakeDistributeLight(x, y, 0f, frameStep, xmax, ymax);
-                    }  // In shadow.  No ligt to distribute
-                    else if (slope < lowSlope)
-                        DistributeLight(x, y, 1f, frameStep, xmax, ymax);
+                    }  
                     else
                     {
-                        var f = (slope - lowSlope) / deltaSlope;
-                        var f1 = 1f - f;
-                        DistributeLight(x, y, f1, frameStep, xmax, ymax);
+                        float localSunFraction = nextSlope < lowSlope ? sunFraction : sunFraction * (1f - (nextSlope - lowSlope) / deltaSlope);  // should be 1f-
+                        //float localSunFraction = nextSlope < lowSlope ? 1f : (nextSlope - lowSlope) / deltaSlope;  // should be 1f-
+                        //float sunFraction = 1f;
+                        DistributeClippedLight(x, y, localSunFraction, clipper);
                     }
-                    var szTransformed = x * m.Row0.Y + y * m.Row1.Y + sz * m.Row2.Y + 1f * m.Row3.Y;
-                    if (!(szTransformed > pzTransformed))
+
+                    if (nextZTransformed > lastZTransformed)
                     {
-                        //_shadowBuf[ix, iy] = 0;
-                    }
-                    else
-                    {
-                        //_shadowBuf[ix, iy] = 9;
-                        pzTransformed = szTransformed;
-                        pIndex = i;
-                        pz = sz;
+                        lastZTransformed = nextZTransformed;
+                        lastHighestZIndex = i;
                     }
                 }
             });
@@ -165,186 +181,50 @@ namespace Shadow.terrain
             return HeightMap[x1, y1];
         }
 
-        void DistributeLight(float x, float y, float light, float frameStep, int xmax, int ymax)
+        void FakeDistributeLight(float x, float y, float sunFraction, LightingTriangleClipper clipper)
         {
-            // Round x,y to the nearest midpoint
-            var rx = (float)(Math.Round(x - 0.5d) + 0.5d);
-            var ry = (float)(Math.Round(y - 0.5d) + 0.5d);
-
-            var ix = (int)rx;
-            var iy = (int)ry;
-
-            if (ix + 2 > xmax || iy + 2 > ymax) return;  // Not right, but safety for now
-
-            //if (ix == 100 && iy == 100)
-            //{
-            //    debugFlag = true;
-            //    Console.WriteLine(@"light={0}", light);
-            //}
-            //var sum = 0f;
-
-            // above,left (minus, minus)
-            var area = (0.5f + rx - x) * (0.5f + ry - y);
-            var lightIncrement = Math.Abs(light * area);
-            if (debugFlag)
-                Console.WriteLine(@"  {0}", lightIncrement);
-            _shadowBuf[ix, iy] += lightIncrement;
-            //sum += area;
-
-            // above, right
-            area = (0.5f - rx + x) * (0.5f + ry - y);
-            lightIncrement = Math.Abs(light * area);
-            if (debugFlag)
-                Console.WriteLine(@"  {0}", lightIncrement);
-            _shadowBuf[ix + 1, iy] += lightIncrement;
-            //sum += area;
-
-            //below,left
-            area = (0.5f + rx - x) * (0.5f - ry + y);
-            lightIncrement = Math.Abs(light * area);
-            if (debugFlag)
-                Console.WriteLine(@"  {0}", lightIncrement);
-            _shadowBuf[ix, iy + 1] += lightIncrement;
-           // sum += area;
-
-            //below,right
-            area = (0.5f - rx + x) * (0.5f - ry + y);
-            lightIncrement = Math.Abs(light * area);
-            if (debugFlag)
-                Console.WriteLine(@"  {0}", lightIncrement);
-            _shadowBuf[ix + 1, iy + 1] += lightIncrement;
-            //sum += area;
-
-            //if (debugFlag)
-            //{
-            //    debugFlag = false;
-            //    Console.WriteLine(@"Done.  sum={0}", sum);
-            //}
-        }
-
-        void DistributeLight(float light, float x, float y, int gridx, int gridy)
-        {
-            var dx = x - gridx;
-            if (dx < 0f) dx = -dx;
-            if (dx > 0.5f) return;
-            var dy = y - gridy;
-            if (dy < 0f) dy = -dy;
-            if (dy > 0.5f) return;
-            var lightIncrement = (1f - dx) * (1f - dy) * light;
-            if(debugFlag)
-                Console.WriteLine(@"  {0}", lightIncrement);
-            _shadowBuf[gridx, gridy] += lightIncrement;
-        }
-
-        void FakeDistributeLight(float x, float y, float light, float frameStep, int xmax, int ymax)
-        {
-            var x1 = (int)Math.Round((x - MinPX) / frameStep);
-            var y1 = (int)Math.Round((y - MinPY) / frameStep);
-            if (x1 < 0 || y1 < 0 || x1 >= xmax || y1 >= ymax)  // Do nothing for now
+            var x1 = (int)Math.Round((x - MinPX) / clipper.GridResolution);
+            var y1 = (int)Math.Round((y - MinPY) / clipper.GridResolution);
+            if (x1 < 0 || y1 < 0 || x1 >= clipper.Width || y1 >= clipper.Height)  // Do nothing for now
                 return;
 
             // This looks pretty good, but it's not right.
             //_shadowBuf[x1, y1] = light;
 
-            _shadowBuf[x1, y1] += light;
+            _shadowBuf[x1, y1] += sunFraction;
         }
 
-        private List<Vector3> CalculateStartsV2(CornerId sunCorner, float step)
+        void DistributeClippedLight(float x, float y, float sunFraction, LightingTriangleClipper clipper)
         {
-            var gridResolution = GridResolution;
-            var xmin = MinPX;
-            var xmax = xmin + (HeightMap.GetLength(0) - 1) * gridResolution;
-            var ymin = MinPY;
-            var ymax = ymin + (HeightMap.GetLength(1) - 1) * gridResolution;
+            // x1, y1 is the x,y corner of the square that contains the center of the lit square. It's
+            // the primary grid cell that will be lit.
+            var x1 = (int)Math.Floor((x - MinPX) / clipper.GridResolution);
+            var y1 = (int)Math.Floor((y - MinPY) / clipper.GridResolution);
 
-            //step = 500f*step; // this is for testing only
-            //SetCorners();
-            var starts = new List<Vector3>();
-            switch (sunCorner)
-            {
-                case CornerId.PP:
-                    {
-                        //var p = Copy(CornerNP);
-                        var p = new Vector3(xmin, ymin, 0f);
-                        while (p.X < xmax)
-                        {
-                            starts.Add(Copy(p));
-                            //CheckPosition(p);
-                            p.X += step;
-                        }
-                        //p = Copy(CornerPP);
-                        p = new Vector3(xmax, ymin, 0f);
-                        while (p.Y < ymax)
-                        {
-                            starts.Add(Copy(p));
-                            //CheckPosition(p);
-                            p.Y += step;
-                        }
-                    }
-                    break;
-                case CornerId.PN:
-                    {
-                        //var p = Copy(CornerNN);
-                        var p = new Vector3(xmin, ymax, 0f);
-                        while (p.X < xmax)
-                        {
-                            starts.Add(Copy(p));
-                            //CheckPosition(p);
-                            p.X += step;
-                        }
+            //if (x1 == 100 && y1 == 100)
+            //    Console.WriteLine(@"  here");
 
-                        //p = Copy(CornerPN);
-                        p = new Vector3(xmax, ymax, 0f);
-                        while (p.Y > ymin)
-                        {
-                            starts.Add(Copy(p));
-                            //CheckPosition(p);
-                            p.Y -= step;
-                        }
-                    }
-                    break;
-                case CornerId.NN:
+            var p = new PointF(x, y);
+            var triangle1 = new Triangle { A = clipper.toP1.Plus(p), B = clipper.toP2.Plus(p), C = clipper.toP3.Plus(p) };
+            var triangle2 = new Triangle { A = clipper.toP1.Plus(p), B = clipper.toP3.Plus(p), C = clipper.toP4.Plus(p) };
+            var rect = new RectangleF { Width = clipper.GridResolution, Height = clipper.GridResolution };
+            var halfSun = sunFraction / 2f;
+
+            for (var xoffset = -1; xoffset < 2; xoffset++)
+                for (var yoffset = -1; yoffset < 2; yoffset++)
+            //var xoffset = 0;
+            //var yoffset = 0;
+                {
+                    var ix = x1 + xoffset;
+                    var iy = y1 + yoffset;
+                    if (ix >= 0 && ix < clipper.Width && iy >= 0 && iy < clipper.Height)
                     {
-                        //var p = Copy(CornerNP);
-                        var p = new Vector3(xmin, ymin, 0f);
-                        while (p.Y < ymax)
-                        {
-                            starts.Add(Copy(p));
-                            //CheckPosition(p);
-                            p.Y += step;
-                        }
-                        //p = Copy(CornerNN);
-                        p = new Vector3(xmin, ymax, 0f);
-                        while (p.X < xmax)
-                        {
-                            starts.Add(Copy(p));
-                            //CheckPosition(p);
-                            p.X += step;
-                        }
+                        rect.X = ix * clipper.GridResolution;
+                        rect.Y = iy * clipper.GridResolution;
+                        clipper.AddLight(triangle1, rect, ix, iy, halfSun);
+                        clipper.AddLight(triangle2, rect, ix, iy, halfSun);
                     }
-                    break;
-                case CornerId.NP:
-                    {
-                        //var p = Copy(CornerNN);
-                        var p = new Vector3(xmin, ymax, 0f);
-                        while (p.Y > ymin)
-                        {
-                            starts.Add(Copy(p));
-                            //CheckPosition(p);
-                            p.Y -= step;
-                        }
-                        //p = Copy(CornerNP);
-                        p = new Vector3(xmin, ymin, 0f);
-                        while (p.X < xmax)
-                        {
-                            starts.Add(Copy(p));
-                            //CheckPosition(p);
-                            p.X += step;
-                        }
-                    }
-                    break;
-            }
-            return starts;
+                }
         }
 
         private List<Vector3> CalculateStartsV3(Vector3 sunPosVec, float resolution)
@@ -354,6 +234,7 @@ namespace Shadow.terrain
             flat.Normalize();
 
             var gridResolution = GridResolution;
+            var halfResolution = gridResolution / 2f;
             var xmin = MinPX;
             var xmax = xmin + (HeightMap.GetLength(0) - 1) * gridResolution;
             var ymin = MinPY;
@@ -368,16 +249,17 @@ namespace Shadow.terrain
                 case CornerId.PP:
                     {
                         //var p = Copy(CornerNP);
-                        var p = new Vector3(xmin, ymin, 0f);
-                        step = flat.Y == 0f ? float.MaxValue : Math.Abs(1f / flat.Y); 
+                        var p = new Vector3(xmin + halfResolution, ymin + halfResolution, 0f);
+                        step = flat.Y == 0f ? float.MaxValue : Math.Abs(1f / flat.Y);
                         while (p.X < xmax)
                         {
                             starts.Add(Copy(p));
                             //CheckPosition(p);
                             p.X += step;
                         }
+
                         //p = Copy(CornerPP);
-                        p = new Vector3(xmax, ymin, 0f);
+                        p = new Vector3(xmax - halfResolution, ymin + halfResolution, 0f);
                         step = flat.X == 0f ? float.MaxValue : Math.Abs(1f / flat.X);
                         while (p.Y < ymax)
                         {
@@ -390,7 +272,7 @@ namespace Shadow.terrain
                 case CornerId.PN:
                     {
                         //var p = Copy(CornerNN);
-                        var p = new Vector3(xmin, ymax, 0f);
+                        var p = new Vector3(xmin + halfResolution, ymax - halfResolution, 0f);
                         step = flat.Y == 0f ? float.MaxValue : Math.Abs(1f / flat.Y);
                         while (p.X < xmax)
                         {
@@ -398,9 +280,13 @@ namespace Shadow.terrain
                             //CheckPosition(p);
                             p.X += step;
                         }
+
+                        // Debugging - turning off the second group
+                        return starts;
+
                         step = flat.X == 0f ? float.MaxValue : Math.Abs(1f / flat.X);
                         //p = Copy(CornerPN);
-                        p = new Vector3(xmax, ymax, 0f);
+                        p = new Vector3(xmax - halfResolution, ymax - halfResolution, 0f);
                         while (p.Y > ymin)
                         {
                             starts.Add(Copy(p));
@@ -412,7 +298,7 @@ namespace Shadow.terrain
                 case CornerId.NN:
                     {
                         //var p = Copy(CornerNP);
-                        var p = new Vector3(xmin, ymin, 0f);
+                        var p = new Vector3(xmin + halfResolution, ymin + halfResolution, 0f);
                         step = flat.X == 0f ? float.MaxValue : Math.Abs(1f / flat.X);
                         while (p.Y < ymax)
                         {
@@ -420,9 +306,10 @@ namespace Shadow.terrain
                             //CheckPosition(p);
                             p.Y += step;
                         }
+
                         step = flat.Y == 0f ? float.MaxValue : Math.Abs(1f / flat.Y);
                         //p = Copy(CornerNN);
-                        p = new Vector3(xmin, ymax, 0f);
+                        p = new Vector3(xmin + halfResolution, ymax - halfResolution, 0f);
                         while (p.X < xmax)
                         {
                             starts.Add(Copy(p));
@@ -434,7 +321,7 @@ namespace Shadow.terrain
                 case CornerId.NP:
                     {
                         //var p = Copy(CornerNN);
-                        var p = new Vector3(xmin, ymax, 0f);
+                        var p = new Vector3(xmin + halfResolution, ymax - halfResolution, 0f);
                         step = flat.X == 0f ? float.MaxValue : Math.Abs(1f / flat.X);
                         while (p.Y > ymin)
                         {
@@ -444,7 +331,7 @@ namespace Shadow.terrain
                         }
                         //p = Copy(CornerNP);
                         step = flat.Y == 0f ? float.MaxValue : Math.Abs(1f / flat.Y);
-                        p = new Vector3(xmin, ymin, 0f);
+                        p = new Vector3(xmin + halfResolution, ymin + halfResolution, 0f);
                         while (p.X < xmax)
                         {
                             starts.Add(Copy(p));

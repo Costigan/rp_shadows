@@ -1,4 +1,4 @@
-﻿using Shadows2.math;
+﻿using Shadows.math;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -146,7 +146,7 @@ namespace Shadows2
             g.Transform = GetTransform();
 
             g.DrawRectangle(Pens.Black, clipRegion.X, clipRegion.Y, clipRegion.Width, clipRegion.Height);
-            g.DrawLine(Pens.Green, 0f, 0f, clipRegion.Width, clipRegion.Height/4f);
+            //g.DrawLine(Pens.Green, 0f, 0f, clipRegion.Width, clipRegion.Height/4f);
 
             if (ClippedTriangles.Count <= TriangleBrushes.Count)
             {
@@ -220,7 +220,10 @@ namespace Shadows2
             panel1.Invalidate();
 
             lblTris.Text = ClippedTriangles.Count.ToString();
-            lblArea.Text = ClippedTriangles.Sum(t => t.Area).ToString();
+            var totalArea = ClippedTriangles.Sum(t => t.Area);
+            lblArea.Text = totalArea.ToString();
+            var fractionalArea = totalArea / StartTriangle.Area;
+            lblFractionalArea.Text = fractionalArea.ToString();
         }
 
         private void btnRotateTriangle_Click(object sender, EventArgs e)

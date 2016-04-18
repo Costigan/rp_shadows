@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shadows2.math
+namespace Shadows.math
 {
     public static class Extensions
     {
@@ -19,6 +19,11 @@ namespace Shadows2.math
         public static bool Equivalent(this PointF a, PointF b, float epsilon = 0.01f)
         {
             return a.Distance(b) < epsilon;
+        }
+
+        public static PointF Plus(this PointF a, PointF b)
+        {
+            return new PointF(a.X + b.X, a.Y + b.Y);
         }
     }
 }
