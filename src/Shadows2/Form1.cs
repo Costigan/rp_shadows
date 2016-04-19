@@ -23,7 +23,7 @@ namespace Shadows2
         public Terrain TheTerrain;
 
         public Bitmap Rendering;
-        float _azimuth, _elevation;
+        float _azimuth = 0f, _elevation= 0.050f;
 
         public Form1()
         {
@@ -257,15 +257,20 @@ namespace Shadows2
             var a = terrain.HeightMap;
             Array.Clear(a, 0, a.GetLength(0) * a.GetLength(1));
 
-            LowMound(a, 20f);
-            CrinkleHeight(a, 2f);
-            FakeCraters(a, 10, terrain.MaxPX / 10f, -10f, new RectangleF(terrain.MinPX,terrain.MinPY,terrain.MaxPX-terrain.MinPX,terrain.MaxPY-terrain.MinPY));
-            ScatterRocks(a, 500, +40f, new RectangleF(terrain.MinPX, terrain.MinPY, terrain.MaxPX - terrain.MinPX, terrain.MaxPY - terrain.MinPY));
+            Tower(a, 4f);
+            //CrinkleHeight(a, 2f);
+            //FakeCraters(a, 10, terrain.MaxPX / 10f, -10f, new RectangleF(terrain.MinPX,terrain.MinPY,terrain.MaxPX-terrain.MinPX,terrain.MaxPY-terrain.MinPY));
+            //ScatterRocks(a, 500, +40f, new RectangleF(terrain.MinPX, terrain.MinPY, terrain.MaxPX - terrain.MinPX, terrain.MaxPY - terrain.MinPY));
         }
 
-        private void LowMound(float[,] a, float v)
+        private void Tower(float[,] a, float height)
         {
-            
+            var xmax = a.GetLength(0);
+            var ymax = a.GetLength(1);
+            var ystart = ymax / 2;
+            for (var i = 0; i < xmax; i++)
+                for (var j = ystart; j < ystart+3; j++)
+                    a[j, i] += height;
         }
 
         void CrinkleHeight(float[,] a, float range)
@@ -340,6 +345,93 @@ namespace Shadows2
         {
             double r;
             tbSunRadius.ForeColor = double.TryParse(tbSunRadius.Text, out r) ? Color.Black : Color.Red;
+        }
+
+        private void synthesize8000X8000ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var rectangle = new Rectangle { Width = 8000, Height = 8000 };
+            var t = new Terrain
+            {
+                HeightMap = new float[rectangle.Width, rectangle.Height],
+                MinPX = 0f,
+                MaxPX = 500f,
+                MinPY = 0f,
+                MaxPY = 500f
+            };
+            SyntheticHeightMap(t);
+            float maxz = float.MinValue;
+            float minz = float.MaxValue;
+            var heightMap = t.HeightMap;
+            for (var i = 0; i < rectangle.Width; i++)
+                for (var j = 0; j < rectangle.Height; j++)
+                {
+                    var v = heightMap[i, j];
+                    if (v > maxz) maxz = v;
+                    if (v < minz) minz = v;
+                }
+            t.Box = new BoundingBox(-250f, 250f, -250f, 250f, 0f, maxz - minz);
+            t.MinPZ = minz;
+            t.MaxPZ = maxz;
+            TheTerrain = t;
+            ShowBitmap(TheTerrain.HeightFieldToBitmap(Rendering));
+        }
+
+        private void synthesize400X400ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var rectangle = new Rectangle { Width = 400, Height = 400 };
+            var t = new Terrain
+            {
+                HeightMap = new float[rectangle.Width, rectangle.Height],
+                MinPX = 0f,
+                MaxPX = 500f,
+                MinPY = 0f,
+                MaxPY = 500f
+            };
+            SyntheticHeightMap(t);
+            float maxz = float.MinValue;
+            float minz = float.MaxValue;
+            var heightMap = t.HeightMap;
+            for (var i = 0; i < rectangle.Width; i++)
+                for (var j = 0; j < rectangle.Height; j++)
+                {
+                    var v = heightMap[i, j];
+                    if (v > maxz) maxz = v;
+                    if (v < minz) minz = v;
+                }
+            t.Box = new BoundingBox(-250f, 250f, -250f, 250f, 0f, maxz - minz);
+            t.MinPZ = minz;
+            t.MaxPZ = maxz;
+            TheTerrain = t;
+            ShowBitmap(TheTerrain.HeightFieldToBitmap(Rendering));
+        }
+
+        private void synthesize10X10ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var rectangle = new Rectangle { Width = 10, Height = 10 };
+            var t = new Terrain
+            {
+                HeightMap = new float[rectangle.Width, rectangle.Height],
+                MinPX = 0f,
+                MaxPX = 500f,
+                MinPY = 0f,
+                MaxPY = 500f
+            };
+            SyntheticHeightMap(t);
+            float maxz = float.MinValue;
+            float minz = float.MaxValue;
+            var heightMap = t.HeightMap;
+            for (var i = 0; i < rectangle.Width; i++)
+                for (var j = 0; j < rectangle.Height; j++)
+                {
+                    var v = heightMap[i, j];
+                    if (v > maxz) maxz = v;
+                    if (v < minz) minz = v;
+                }
+            t.Box = new BoundingBox(-250f, 250f, -250f, 250f, 0f, maxz - minz);
+            t.MinPZ = minz;
+            t.MaxPZ = maxz;
+            TheTerrain = t;
+            ShowBitmap(TheTerrain.HeightFieldToBitmap(Rendering));
         }
 
         void UpdateToSun(Vector3d v)

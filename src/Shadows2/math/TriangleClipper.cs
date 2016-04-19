@@ -291,7 +291,8 @@ namespace Shadows.math
         public float GridResolution;
         public int Width;
         public int Height;
-        public float HalfSun;
+        public float HalfSunDividedByGridCellArea;
+        public float InvertedGridCellArea;
         public int GridCellX;
         public int GridCellY;
         public float[,] ShadowArray;
@@ -300,7 +301,7 @@ namespace Shadows.math
         {
             GridCellX = ix;
             GridCellY = iy;
-            HalfSun = halfSun;
+            HalfSunDividedByGridCellArea = halfSun;
             //if (GridCellX == 100 && GridCellY == 100)
             //{
             //    Console.WriteLine(@"r={0}", r);
@@ -319,7 +320,12 @@ namespace Shadows.math
                 Console.WriteLine(@"  incrementedValue={0}", ShadowArray[GridCellX, GridCellY] + HalfSun * t.Area);
             }
             */
-            ShadowArray[GridCellX, GridCellY] += HalfSun * t.Area;
+
+            var increment = HalfSunDividedByGridCellArea * t.Area;
+            ShadowArray[GridCellX, GridCellY] += increment;
+
+            if (GridCellX == 100 && GridCellY == 100)
+                Console.WriteLine(increment);
         }
     }
 }

@@ -45,6 +45,9 @@
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.cbRaycastMulti = new System.Windows.Forms.CheckBox();
+            this.tbSunRadius = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.tbScale = new System.Windows.Forms.TrackBar();
             this.panel3 = new System.Windows.Forms.Panel();
@@ -55,9 +58,9 @@
             this.tbAzimuth = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.panel4 = new System.Windows.Forms.Panel();
-            this.tbSunRadius = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.cbRaycastMulti = new System.Windows.Forms.CheckBox();
+            this.synthesize8000X8000ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.synthesize400X400ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.synthesize10X10ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel2.SuspendLayout();
@@ -89,7 +92,10 @@
             this.open500X500ToolStripMenuItem,
             this.open1000X1000ToolStripMenuItem,
             this.toolStripSeparator1,
-            this.synthesize500X500ToolStripMenuItem});
+            this.synthesize10X10ToolStripMenuItem,
+            this.synthesize400X400ToolStripMenuItem,
+            this.synthesize500X500ToolStripMenuItem,
+            this.synthesize8000X8000ToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "&File";
@@ -97,54 +103,54 @@
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
             this.openToolStripMenuItem.Text = "&Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
             // open20X20ToolStripMenuItem
             // 
             this.open20X20ToolStripMenuItem.Name = "open20X20ToolStripMenuItem";
-            this.open20X20ToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
+            this.open20X20ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
             this.open20X20ToolStripMenuItem.Text = "Open 20 x 20";
             this.open20X20ToolStripMenuItem.Click += new System.EventHandler(this.open20X20ToolStripMenuItem_Click);
             // 
             // open100X100ToolStripMenuItem
             // 
             this.open100X100ToolStripMenuItem.Name = "open100X100ToolStripMenuItem";
-            this.open100X100ToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
+            this.open100X100ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
             this.open100X100ToolStripMenuItem.Text = "Open 100 x 100";
             this.open100X100ToolStripMenuItem.Click += new System.EventHandler(this.open100X100ToolStripMenuItem_Click);
             // 
             // open400X400ToolStripMenuItem
             // 
             this.open400X400ToolStripMenuItem.Name = "open400X400ToolStripMenuItem";
-            this.open400X400ToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
+            this.open400X400ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
             this.open400X400ToolStripMenuItem.Text = "Open 400 x 400";
             this.open400X400ToolStripMenuItem.Click += new System.EventHandler(this.open400X400ToolStripMenuItem_Click);
             // 
             // open500X500ToolStripMenuItem
             // 
             this.open500X500ToolStripMenuItem.Name = "open500X500ToolStripMenuItem";
-            this.open500X500ToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
+            this.open500X500ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
             this.open500X500ToolStripMenuItem.Text = "Open 500 x 500";
             this.open500X500ToolStripMenuItem.Click += new System.EventHandler(this.open500X500ToolStripMenuItem_Click);
             // 
             // open1000X1000ToolStripMenuItem
             // 
             this.open1000X1000ToolStripMenuItem.Name = "open1000X1000ToolStripMenuItem";
-            this.open1000X1000ToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
+            this.open1000X1000ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
             this.open1000X1000ToolStripMenuItem.Text = "Open 1000 x 1000";
             this.open1000X1000ToolStripMenuItem.Click += new System.EventHandler(this.open1000X1000ToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(176, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(188, 6);
             // 
             // synthesize500X500ToolStripMenuItem
             // 
             this.synthesize500X500ToolStripMenuItem.Name = "synthesize500X500ToolStripMenuItem";
-            this.synthesize500X500ToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
+            this.synthesize500X500ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
             this.synthesize500X500ToolStripMenuItem.Text = "Synthesize 500 x 500";
             this.synthesize500X500ToolStripMenuItem.Click += new System.EventHandler(this.synthesize500X500ToolStripMenuItem_Click);
             // 
@@ -209,6 +215,34 @@
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(809, 57);
             this.panel2.TabIndex = 3;
+            // 
+            // cbRaycastMulti
+            // 
+            this.cbRaycastMulti.AutoSize = true;
+            this.cbRaycastMulti.Location = new System.Drawing.Point(494, 28);
+            this.cbRaycastMulti.Name = "cbRaycastMulti";
+            this.cbRaycastMulti.Size = new System.Drawing.Size(111, 17);
+            this.cbRaycastMulti.TabIndex = 8;
+            this.cbRaycastMulti.Text = "Use Multiple Rays";
+            this.cbRaycastMulti.UseVisualStyleBackColor = true;
+            // 
+            // tbSunRadius
+            // 
+            this.tbSunRadius.Location = new System.Drawing.Point(409, 26);
+            this.tbSunRadius.Name = "tbSunRadius";
+            this.tbSunRadius.Size = new System.Drawing.Size(63, 20);
+            this.tbSunRadius.TabIndex = 7;
+            this.tbSunRadius.Text = "0.25";
+            this.tbSunRadius.TextChanged += new System.EventHandler(this.tbSunRadius_TextChanged);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(314, 29);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(89, 13);
+            this.label3.TabIndex = 6;
+            this.label3.Text = "Sun Radius (deg)";
             // 
             // label1
             // 
@@ -318,33 +352,26 @@
             this.panel4.Size = new System.Drawing.Size(655, 392);
             this.panel4.TabIndex = 4;
             // 
-            // tbSunRadius
+            // synthesize8000X8000ToolStripMenuItem
             // 
-            this.tbSunRadius.Location = new System.Drawing.Point(409, 26);
-            this.tbSunRadius.Name = "tbSunRadius";
-            this.tbSunRadius.Size = new System.Drawing.Size(63, 20);
-            this.tbSunRadius.TabIndex = 7;
-            this.tbSunRadius.Text = "0.25";
-            this.tbSunRadius.TextChanged += new System.EventHandler(this.tbSunRadius_TextChanged);
+            this.synthesize8000X8000ToolStripMenuItem.Name = "synthesize8000X8000ToolStripMenuItem";
+            this.synthesize8000X8000ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.synthesize8000X8000ToolStripMenuItem.Text = "Synthesize 8000 x 8000";
+            this.synthesize8000X8000ToolStripMenuItem.Click += new System.EventHandler(this.synthesize8000X8000ToolStripMenuItem_Click);
             // 
-            // label3
+            // synthesize400X400ToolStripMenuItem
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(314, 29);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(89, 13);
-            this.label3.TabIndex = 6;
-            this.label3.Text = "Sun Radius (deg)";
+            this.synthesize400X400ToolStripMenuItem.Name = "synthesize400X400ToolStripMenuItem";
+            this.synthesize400X400ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.synthesize400X400ToolStripMenuItem.Text = "Synthesize 400 x 400";
+            this.synthesize400X400ToolStripMenuItem.Click += new System.EventHandler(this.synthesize400X400ToolStripMenuItem_Click);
             // 
-            // cbRaycastMulti
+            // synthesize10X10ToolStripMenuItem
             // 
-            this.cbRaycastMulti.AutoSize = true;
-            this.cbRaycastMulti.Location = new System.Drawing.Point(494, 28);
-            this.cbRaycastMulti.Name = "cbRaycastMulti";
-            this.cbRaycastMulti.Size = new System.Drawing.Size(111, 17);
-            this.cbRaycastMulti.TabIndex = 8;
-            this.cbRaycastMulti.Text = "Use Multiple Rays";
-            this.cbRaycastMulti.UseVisualStyleBackColor = true;
+            this.synthesize10X10ToolStripMenuItem.Name = "synthesize10X10ToolStripMenuItem";
+            this.synthesize10X10ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.synthesize10X10ToolStripMenuItem.Text = "Synthesize 10 x 10";
+            this.synthesize10X10ToolStripMenuItem.Click += new System.EventHandler(this.synthesize10X10ToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -406,6 +433,9 @@
         private System.Windows.Forms.TextBox tbSunRadius;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.CheckBox cbRaycastMulti;
+        private System.Windows.Forms.ToolStripMenuItem synthesize8000X8000ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem synthesize400X400ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem synthesize10X10ToolStripMenuItem;
     }
 }
 

@@ -16,10 +16,19 @@ namespace Shadows2
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            if (true)
-                Application.Run(new Form1());
-            else
-                Application.Run(new TriangleTests());
+            switch (1)
+            {
+                case 1:
+
+                    Application.Run(new Form1());
+                    break;
+                case 2:
+                    Application.Run(new TriangleTests());
+                    break;
+                case 3:
+                    Application.Run(new RayTest());
+                    break;
+            }
         }
     }
 }

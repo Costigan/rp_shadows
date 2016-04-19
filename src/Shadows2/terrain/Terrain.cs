@@ -61,6 +61,7 @@ namespace Shadow.terrain
         {
             var gridResolution = GridResolution;
             var step = 1f * gridResolution; // was 0.75 of the resolution of the grid
+            var gridCellArea = step * step;
             var sunPosVec = new Vector3((float)sun1.X, (float)sun1.Y, (float)sun1.Z);
 
             var ixmax = HeightMap.GetLength(0);
@@ -68,41 +69,42 @@ namespace Shadow.terrain
 
             var origin = new Vector3(0f, 0f, 0f);
             var zAxis = new Vector3(0f, 0f, 1f);
-            var cross = Vector3.Cross(sunPosVec, zAxis);
-            var up = Vector3.Cross(-sunPosVec, cross);
-            var m = Matrix4.LookAt(sunPosVec, origin, up);
-
-            var sunXY = Math.Sqrt(sunPosVec.X * sunPosVec.X + sunPosVec.Y * sunPosVec.Y);
-            //var sunAngle = Math.Atan2(sunPosVec.Z, sunXY);
-            //var highSlope = (float)Math.Tan(sunAngle + sunHalfAngle);
-            //var lowSlope = (float)Math.Tan(sunAngle - sunHalfAngle);
-
-            var highSlope = (float)Math.Tan(sunHalfAngle);
-            var lowSlope = -highSlope;
-
-            var deltaSlope = highSlope - lowSlope;
-
-            var walkVec = -sunPosVec;
-            walkVec.Z = 0f;
-            walkVec = walkVec.Normalized() * step;
-
-            // Calculate offsets to get the corners of the lit square
-            var toForward = walkVec / 2f;
-            var toRight = new Vector3(toForward.Y, -toForward.X, 0f);
-            var toP1 = toForward + toRight;
-            var toP2 = -toForward + toRight;
-            var toP3 = -toForward - toRight;
-            var toP4 = toForward - toRight;
 
             var starts = CalculateStartsV3(sunPosVec, gridResolution);
             //if (SingleRay)
             //    starts = new List<Vector3> { starts[(int)((starts.Count - 1) * RayFraction)] };
-            if (SingleRay)
-                starts = starts.Take(3).ToList();
+            if (false)
+                starts = new List<Vector3>() { starts[10] };
 
-            starts.ForEach(s =>
-            //starts.AsParallel().ForAll(s => 
+            var sideCount = 9;
+            var rays = CalculateSunRays(sunPosVec, sideCount);
+            var raysCount = rays.Count;
+            var totalRayCount = starts.Count * raysCount;
+
+            Enumerable.Range(0, totalRayCount).AsParallel().ForAll(index =>
             {
+                var startIndex = index / raysCount;
+                var rayIndex = index - startIndex * raysCount;
+                var s = starts[startIndex];
+                var ray = rays[rayIndex];
+                var toSun = ray.ToSun;
+
+                var cross = Vector3.Cross(toSun, zAxis);
+                var up = Vector3.Cross(-toSun, cross);
+                var m = Matrix4.LookAt(toSun, origin, up);
+
+                var walkVec = -toSun;
+                walkVec.Z = 0f;
+                walkVec = walkVec.Normalized() * step;
+
+                // Calculate offsets to get the corners of the lit square
+                var toForward = walkVec / 2f;
+                var toRight = new Vector3(toForward.Y, -toForward.X, 0f);
+                var toP1 = toForward + toRight;
+                var toP2 = -toForward + toRight;
+                var toP3 = -toForward - toRight;
+                var toP4 = toForward - toRight;
+
                 var resolution = gridResolution;
                 var clipper = new LightingTriangleClipper();
                 clipper.GridResolution = resolution;
@@ -113,6 +115,7 @@ namespace Shadow.terrain
                 clipper.Width = Width;
                 clipper.Height = Height;
                 clipper.ShadowArray = _shadowBuf;
+                clipper.InvertedGridCellArea = 1f / gridCellArea;
 
                 var max = ixmax + iymax;
                 var six = (int)Math.Round((s.X - MinPX) / resolution);
@@ -122,7 +125,6 @@ namespace Shadow.terrain
                 var startX = s.X;
                 var startY = s.Y;
                 var pz = HeightMap[six, siy];  // not interpolated
-                var lastHighestZIndex = 0;
                 var lastZTransformed = startX * m.Row0.Y + startY * m.Row1.Y + pz * m.Row2.Y + 1f * m.Row3.Y;
                 for (var i = 1; i < max; i++)
                 {
@@ -131,23 +133,15 @@ namespace Shadow.terrain
                     var z = InterpolatedHeightMap(x, y, resolution, clipper.Width, clipper.Height);
                     var nextZTransformed = x * m.Row0.Y + y * m.Row1.Y + z * m.Row2.Y + 1f * m.Row3.Y;
 
-                    var nextSlope = (nextZTransformed - lastZTransformed) / (4f* step * (i - lastHighestZIndex)); // Debug: 2f shouldn't be here
-                    if (nextSlope > highSlope)  // In shadow.  No light to distribute
-                    {
-                        //FakeDistributeLight(x, y, 0f, frameStep, xmax, ymax);
-                    }  
-                    else
-                    {
-                        float localSunFraction = nextSlope < lowSlope ? sunFraction : sunFraction * (1f - (nextSlope - lowSlope) / deltaSlope);  // should be 1f-
-                        //float localSunFraction = nextSlope < lowSlope ? 1f : (nextSlope - lowSlope) / deltaSlope;  // should be 1f-
-                        //float sunFraction = 1f;
-                        DistributeClippedLight(x, y, localSunFraction, clipper);
-                    }
+                    //if (z > 0f)
+                    //    Console.WriteLine("here");
 
-                    if (nextZTransformed > lastZTransformed)
+                    if (nextZTransformed >= lastZTransformed)
+                    //if (true)
                     {
+                        // not sure how to handle equality here
+                        DistributeClippedLight(x, y, 1f, clipper);
                         lastZTransformed = nextZTransformed;
-                        lastHighestZIndex = i;
                     }
                 }
             });
@@ -201,28 +195,35 @@ namespace Shadow.terrain
             var x1 = (int)Math.Floor((x - MinPX) / clipper.GridResolution);
             var y1 = (int)Math.Floor((y - MinPY) / clipper.GridResolution);
 
-            //if (x1 == 100 && y1 == 100)
-            //    Console.WriteLine(@"  here");
+            //Console.WriteLine(@"x1={0} y1={1}   x={2} y={3}", x1, y1, x, y);
 
             var p = new PointF(x, y);
             var triangle1 = new Triangle { A = clipper.toP1.Plus(p), B = clipper.toP2.Plus(p), C = clipper.toP3.Plus(p) };
             var triangle2 = new Triangle { A = clipper.toP1.Plus(p), B = clipper.toP3.Plus(p), C = clipper.toP4.Plus(p) };
             var rect = new RectangleF { Width = clipper.GridResolution, Height = clipper.GridResolution };
-            var halfSun = sunFraction / 2f;
+            var halfSun = sunFraction;  // / 2f;
 
+            // debugging
             for (var xoffset = -1; xoffset < 2; xoffset++)
                 for (var yoffset = -1; yoffset < 2; yoffset++)
-            //var xoffset = 0;
-            //var yoffset = 0;
+                //var xoffset = 0;
+                //var yoffset = 0;
                 {
                     var ix = x1 + xoffset;
                     var iy = y1 + yoffset;
+
                     if (ix >= 0 && ix < clipper.Width && iy >= 0 && iy < clipper.Height)
                     {
                         rect.X = ix * clipper.GridResolution;
                         rect.Y = iy * clipper.GridResolution;
-                        clipper.AddLight(triangle1, rect, ix, iy, halfSun);
-                        clipper.AddLight(triangle2, rect, ix, iy, halfSun);
+
+                        if (ix == 100 && iy == 100)
+                        {
+                            Console.WriteLine(@"Clipping to rect {0}", rect);
+                        }
+
+                        clipper.AddLight(triangle1, rect, ix, iy, halfSun * clipper.InvertedGridCellArea);
+                        clipper.AddLight(triangle2, rect, ix, iy, halfSun * clipper.InvertedGridCellArea);
                     }
                 }
         }
@@ -250,7 +251,7 @@ namespace Shadow.terrain
                     {
                         //var p = Copy(CornerNP);
                         var p = new Vector3(xmin + halfResolution, ymin + halfResolution, 0f);
-                        step = flat.Y == 0f ? float.MaxValue : Math.Abs(1f / flat.Y);
+                        step = flat.Y == 0f ? float.MaxValue : Math.Abs(gridResolution / flat.Y);
                         while (p.X < xmax)
                         {
                             starts.Add(Copy(p));
@@ -260,7 +261,7 @@ namespace Shadow.terrain
 
                         //p = Copy(CornerPP);
                         p = new Vector3(xmax - halfResolution, ymin + halfResolution, 0f);
-                        step = flat.X == 0f ? float.MaxValue : Math.Abs(1f / flat.X);
+                        step = flat.X == 0f ? float.MaxValue : Math.Abs(gridResolution / flat.X);
                         while (p.Y < ymax)
                         {
                             starts.Add(Copy(p));
@@ -273,7 +274,7 @@ namespace Shadow.terrain
                     {
                         //var p = Copy(CornerNN);
                         var p = new Vector3(xmin + halfResolution, ymax - halfResolution, 0f);
-                        step = flat.Y == 0f ? float.MaxValue : Math.Abs(1f / flat.Y);
+                        step = flat.Y == 0f ? float.MaxValue : Math.Abs(gridResolution / flat.Y);
                         while (p.X < xmax)
                         {
                             starts.Add(Copy(p));
@@ -281,10 +282,7 @@ namespace Shadow.terrain
                             p.X += step;
                         }
 
-                        // Debugging - turning off the second group
-                        return starts;
-
-                        step = flat.X == 0f ? float.MaxValue : Math.Abs(1f / flat.X);
+                        step = flat.X == 0f ? float.MaxValue : Math.Abs(gridResolution / flat.X);
                         //p = Copy(CornerPN);
                         p = new Vector3(xmax - halfResolution, ymax - halfResolution, 0f);
                         while (p.Y > ymin)
@@ -299,7 +297,7 @@ namespace Shadow.terrain
                     {
                         //var p = Copy(CornerNP);
                         var p = new Vector3(xmin + halfResolution, ymin + halfResolution, 0f);
-                        step = flat.X == 0f ? float.MaxValue : Math.Abs(1f / flat.X);
+                        step = flat.X == 0f ? float.MaxValue : Math.Abs(gridResolution / flat.X);
                         while (p.Y < ymax)
                         {
                             starts.Add(Copy(p));
@@ -307,7 +305,7 @@ namespace Shadow.terrain
                             p.Y += step;
                         }
 
-                        step = flat.Y == 0f ? float.MaxValue : Math.Abs(1f / flat.Y);
+                        step = flat.Y == 0f ? float.MaxValue : Math.Abs(gridResolution / flat.Y);
                         //p = Copy(CornerNN);
                         p = new Vector3(xmin + halfResolution, ymax - halfResolution, 0f);
                         while (p.X < xmax)
@@ -322,7 +320,7 @@ namespace Shadow.terrain
                     {
                         //var p = Copy(CornerNN);
                         var p = new Vector3(xmin + halfResolution, ymax - halfResolution, 0f);
-                        step = flat.X == 0f ? float.MaxValue : Math.Abs(1f / flat.X);
+                        step = flat.X == 0f ? float.MaxValue : Math.Abs(gridResolution / flat.X);
                         while (p.Y > ymin)
                         {
                             starts.Add(Copy(p));
@@ -330,7 +328,7 @@ namespace Shadow.terrain
                             p.Y -= step;
                         }
                         //p = Copy(CornerNP);
-                        step = flat.Y == 0f ? float.MaxValue : Math.Abs(1f / flat.Y);
+                        step = flat.Y == 0f ? float.MaxValue : Math.Abs(gridResolution / flat.Y);
                         p = new Vector3(xmin + halfResolution, ymin + halfResolution, 0f);
                         while (p.X < xmax)
                         {
@@ -349,7 +347,7 @@ namespace Shadow.terrain
             var width = Width;
             var height = Height;
             Bitmap result = input;
-            if (input == null || input.Width != width || input.Height!= height)
+            if (input == null || input.Width != width || input.Height != height)
                 result = new Bitmap(width, height, PixelFormat.Format8bppIndexed);
             var palette = result.Palette;
             for (var i = 0; i < 256; i++)
@@ -386,7 +384,7 @@ namespace Shadow.terrain
 
             float maxv = float.MinValue;
             for (var i = 0; i < height; i++)
-            for (var j=0;j< width;j++)
+                for (var j = 0; j < width; j++)
                 {
                     var v = _shadowBuf[i, j];
                     if (v > maxv) maxv = v;
@@ -405,7 +403,7 @@ namespace Shadow.terrain
                     for (var j = 0; j < width; j++)
                     {
                         var lightFraction = _shadowBuf[iflipped, j];
-                        var val = (byte)(255 * lightFraction/maxv);
+                        var val = (byte)(255 * lightFraction / maxv);
                         *(ptr++) = val;
                     }
                 }
@@ -414,5 +412,83 @@ namespace Shadow.terrain
             return result;
         }
 
+        /// <summary>
+        /// Calculate multiple vectors toward the sun.  Each one represents a fraction of the sun's visible surface.
+        /// </summary>
+        /// <param name="toSun"></param>
+        /// <param name="radialCount"></param>
+        /// <returns></returns>
+        public List<SunRay> CalculateSunRays(Vector3 toSun, int radialCount)
+        {
+            const float sunRadiusDeg = 0.25f;
+            float sunRadiusRad = DegToRad(sunRadiusDeg);
+
+            var toSun4 = new Vector4(toSun);
+
+            var zAxis = new Vector3(0f, 0f, 1f);
+            var sunInPlane = new Vector3(toSun.Xy);
+            var rotateSunInPlane = Matrix4.CreateFromAxisAngle(zAxis, DegToRad(90f));
+            var upDownAxis4 = Vector4.Transform(new Vector4(toSun.Xy), rotateSunInPlane);
+            var upDownAxis = new Vector3(upDownAxis4);
+
+            var steps = 2 * radialCount + 1;
+            var stepf = 2f / steps;
+            var origin = new PointF(0f, 0f);
+            var rays = new List<SunRay>();
+            for (var i = -radialCount; i <= radialCount; i++)
+                for (var j = -radialCount; j <= radialCount; j++)
+                {
+                    var p = new PointF(i * stepf, j * stepf);
+                    Console.WriteLine(@"p={0}", p);
+                    var nearCorner = new PointF(stepf * Math.Max(0f, Math.Abs(i) - 0.5f), Math.Max(0f, stepf * Math.Abs(j) - 0.5f));
+                    var nearDistance = origin.Distance(nearCorner);
+                    if (nearDistance >= 1f)
+                        continue;
+
+                    // Calculate the ray by rotating the initial ray
+                    var farCorner = new PointF(stepf * Math.Abs(i) + 0.5f, stepf * Math.Abs(j) + 0.5f);
+                    Matrix4 rotate1;
+                    Matrix4.CreateFromAxisAngle(zAxis, i * stepf * sunRadiusRad, out rotate1);
+                    Matrix4 rotate2;
+                    Matrix4.CreateFromAxisAngle(upDownAxis, j * stepf * sunRadiusRad, out rotate2);
+                    Matrix4 product;
+                    Matrix4.Mult(ref rotate1, ref rotate2, out product);  // Not sure about the order here
+                    var transformedToSun = Vector4.Transform(toSun4, product);
+
+                    // How much of the square is covered
+                    var farDistance = origin.Distance(farCorner);
+                    if (farDistance <= 1f)
+                    {
+                        var v = new Vector3(transformedToSun);
+                        v.Normalize();
+                        rays.Add(new SunRay { ToSun = v, SunFraction = 1f });  // Will normalize later
+                    }
+                    else
+                    {
+                        var fraction = (1f - nearDistance) / (farDistance - nearDistance);
+                        if (fraction > 0.25f)  // Just clip if the ray is too far outside the sun
+                        {
+                            var v = new Vector3(transformedToSun);
+                            v.Normalize();
+                            rays.Add(new SunRay { ToSun = v, SunFraction = fraction });
+                        }
+                    }
+                }
+
+            var sum = rays.Sum(r => r.SunFraction);
+            var normalizedRays = rays.Select(r => new SunRay { ToSun = r.ToSun, SunFraction = r.SunFraction / sum }).ToList();
+            return normalizedRays;
+        }
+
+        float DegToRad(float deg)
+        {
+            return deg * 3.141592653f / 180f;
+        }
+    }
+
+    public struct SunRay
+    {
+        public Vector3 ToSun;
+        public float SunFraction;
     }
 }
