@@ -37,7 +37,10 @@
             this.open500X500ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.open1000X1000ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.synthesize10X10ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.synthesize400X400ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.synthesize500X500ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.synthesize8000X8000ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.renderHeightFieldToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoUpdateAfterAzElChangeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -45,7 +48,6 @@
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.cbRaycastMulti = new System.Windows.Forms.CheckBox();
             this.tbSunRadius = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
@@ -58,9 +60,14 @@
             this.tbAzimuth = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.panel4 = new System.Windows.Forms.Panel();
-            this.synthesize8000X8000ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.synthesize400X400ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.synthesize10X10ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.button1 = new System.Windows.Forms.Button();
+            this.button2 = new System.Windows.Forms.Button();
+            this.button3 = new System.Windows.Forms.Button();
+            this.button4 = new System.Windows.Forms.Button();
+            this.button5 = new System.Windows.Forms.Button();
+            this.actionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.takeTimingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.printTimeEstimatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel2.SuspendLayout();
@@ -75,10 +82,11 @@
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.viewToolStripMenuItem});
+            this.viewToolStripMenuItem,
+            this.actionsToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(809, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(882, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -147,12 +155,33 @@
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(188, 6);
             // 
+            // synthesize10X10ToolStripMenuItem
+            // 
+            this.synthesize10X10ToolStripMenuItem.Name = "synthesize10X10ToolStripMenuItem";
+            this.synthesize10X10ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.synthesize10X10ToolStripMenuItem.Text = "Synthesize 10 x 10";
+            this.synthesize10X10ToolStripMenuItem.Click += new System.EventHandler(this.synthesize10X10ToolStripMenuItem_Click);
+            // 
+            // synthesize400X400ToolStripMenuItem
+            // 
+            this.synthesize400X400ToolStripMenuItem.Name = "synthesize400X400ToolStripMenuItem";
+            this.synthesize400X400ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.synthesize400X400ToolStripMenuItem.Text = "Synthesize 400 x 400";
+            this.synthesize400X400ToolStripMenuItem.Click += new System.EventHandler(this.synthesize400X400ToolStripMenuItem_Click);
+            // 
             // synthesize500X500ToolStripMenuItem
             // 
             this.synthesize500X500ToolStripMenuItem.Name = "synthesize500X500ToolStripMenuItem";
             this.synthesize500X500ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
             this.synthesize500X500ToolStripMenuItem.Text = "Synthesize 500 x 500";
             this.synthesize500X500ToolStripMenuItem.Click += new System.EventHandler(this.synthesize500X500ToolStripMenuItem_Click);
+            // 
+            // synthesize8000X8000ToolStripMenuItem
+            // 
+            this.synthesize8000X8000ToolStripMenuItem.Name = "synthesize8000X8000ToolStripMenuItem";
+            this.synthesize8000X8000ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.synthesize8000X8000ToolStripMenuItem.Text = "Synthesize 8000 x 8000";
+            this.synthesize8000X8000ToolStripMenuItem.Click += new System.EventHandler(this.synthesize8000X8000ToolStripMenuItem_Click);
             // 
             // viewToolStripMenuItem
             // 
@@ -197,14 +226,18 @@
             // panel1
             // 
             this.panel1.Dock = System.Windows.Forms.DockStyle.Left;
-            this.panel1.Location = new System.Drawing.Point(0, 81);
+            this.panel1.Location = new System.Drawing.Point(0, 104);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(154, 392);
+            this.panel1.Size = new System.Drawing.Size(154, 504);
             this.panel1.TabIndex = 2;
             // 
             // panel2
             // 
-            this.panel2.Controls.Add(this.cbRaycastMulti);
+            this.panel2.Controls.Add(this.button5);
+            this.panel2.Controls.Add(this.button2);
+            this.panel2.Controls.Add(this.button4);
+            this.panel2.Controls.Add(this.button3);
+            this.panel2.Controls.Add(this.button1);
             this.panel2.Controls.Add(this.tbSunRadius);
             this.panel2.Controls.Add(this.label3);
             this.panel2.Controls.Add(this.label1);
@@ -213,22 +246,12 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel2.Location = new System.Drawing.Point(0, 24);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(809, 57);
+            this.panel2.Size = new System.Drawing.Size(882, 80);
             this.panel2.TabIndex = 3;
-            // 
-            // cbRaycastMulti
-            // 
-            this.cbRaycastMulti.AutoSize = true;
-            this.cbRaycastMulti.Location = new System.Drawing.Point(494, 28);
-            this.cbRaycastMulti.Name = "cbRaycastMulti";
-            this.cbRaycastMulti.Size = new System.Drawing.Size(111, 17);
-            this.cbRaycastMulti.TabIndex = 8;
-            this.cbRaycastMulti.Text = "Use Multiple Rays";
-            this.cbRaycastMulti.UseVisualStyleBackColor = true;
             // 
             // tbSunRadius
             // 
-            this.tbSunRadius.Location = new System.Drawing.Point(409, 26);
+            this.tbSunRadius.Location = new System.Drawing.Point(404, 26);
             this.tbSunRadius.Name = "tbSunRadius";
             this.tbSunRadius.Size = new System.Drawing.Size(63, 20);
             this.tbSunRadius.TabIndex = 7;
@@ -238,7 +261,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(314, 29);
+            this.label3.Location = new System.Drawing.Point(309, 29);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(89, 13);
             this.label3.TabIndex = 6;
@@ -255,11 +278,11 @@
             // 
             // tbScale
             // 
-            this.tbScale.Location = new System.Drawing.Point(121, 26);
+            this.tbScale.Location = new System.Drawing.Point(43, 26);
             this.tbScale.Maximum = 30;
             this.tbScale.Minimum = 1;
             this.tbScale.Name = "tbScale";
-            this.tbScale.Size = new System.Drawing.Size(182, 45);
+            this.tbScale.Size = new System.Drawing.Size(260, 45);
             this.tbScale.TabIndex = 5;
             this.tbScale.TickStyle = System.Windows.Forms.TickStyle.None;
             this.tbScale.Value = 1;
@@ -276,13 +299,13 @@
             this.panel3.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel3.Location = new System.Drawing.Point(0, 0);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(809, 22);
+            this.panel3.Size = new System.Drawing.Size(882, 22);
             this.panel3.TabIndex = 2;
             // 
             // btnUpdateFromAzEl
             // 
             this.btnUpdateFromAzEl.Dock = System.Windows.Forms.DockStyle.Right;
-            this.btnUpdateFromAzEl.Location = new System.Drawing.Point(734, 0);
+            this.btnUpdateFromAzEl.Location = new System.Drawing.Point(807, 0);
             this.btnUpdateFromAzEl.Name = "btnUpdateFromAzEl";
             this.btnUpdateFromAzEl.Size = new System.Drawing.Size(75, 22);
             this.btnUpdateFromAzEl.TabIndex = 7;
@@ -347,37 +370,89 @@
             this.panel4.AutoScroll = true;
             this.panel4.Controls.Add(this.pictureBox1);
             this.panel4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel4.Location = new System.Drawing.Point(154, 81);
+            this.panel4.Location = new System.Drawing.Point(154, 104);
             this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(655, 392);
+            this.panel4.Size = new System.Drawing.Size(728, 504);
             this.panel4.TabIndex = 4;
             // 
-            // synthesize8000X8000ToolStripMenuItem
+            // button1
             // 
-            this.synthesize8000X8000ToolStripMenuItem.Name = "synthesize8000X8000ToolStripMenuItem";
-            this.synthesize8000X8000ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
-            this.synthesize8000X8000ToolStripMenuItem.Text = "Synthesize 8000 x 8000";
-            this.synthesize8000X8000ToolStripMenuItem.Click += new System.EventHandler(this.synthesize8000X8000ToolStripMenuItem_Click);
+            this.button1.Location = new System.Drawing.Point(723, 28);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 9;
+            this.button1.Text = "d=10 side=3";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
-            // synthesize400X400ToolStripMenuItem
+            // button2
             // 
-            this.synthesize400X400ToolStripMenuItem.Name = "synthesize400X400ToolStripMenuItem";
-            this.synthesize400X400ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
-            this.synthesize400X400ToolStripMenuItem.Text = "Synthesize 400 x 400";
-            this.synthesize400X400ToolStripMenuItem.Click += new System.EventHandler(this.synthesize400X400ToolStripMenuItem_Click);
+            this.button2.Location = new System.Drawing.Point(804, 28);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(75, 23);
+            this.button2.TabIndex = 9;
+            this.button2.Text = "d=10 side=7";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
-            // synthesize10X10ToolStripMenuItem
+            // button3
             // 
-            this.synthesize10X10ToolStripMenuItem.Name = "synthesize10X10ToolStripMenuItem";
-            this.synthesize10X10ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
-            this.synthesize10X10ToolStripMenuItem.Text = "Synthesize 10 x 10";
-            this.synthesize10X10ToolStripMenuItem.Click += new System.EventHandler(this.synthesize10X10ToolStripMenuItem_Click);
+            this.button3.Location = new System.Drawing.Point(561, 28);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(75, 23);
+            this.button3.TabIndex = 9;
+            this.button3.Text = "d=10 side=0";
+            this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.button3_Click);
+            // 
+            // button4
+            // 
+            this.button4.Location = new System.Drawing.Point(642, 28);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(75, 23);
+            this.button4.TabIndex = 9;
+            this.button4.Text = "d=30 side=0";
+            this.button4.UseVisualStyleBackColor = true;
+            this.button4.Click += new System.EventHandler(this.button4_Click);
+            // 
+            // button5
+            // 
+            this.button5.Location = new System.Drawing.Point(804, 51);
+            this.button5.Name = "button5";
+            this.button5.Size = new System.Drawing.Size(75, 23);
+            this.button5.TabIndex = 9;
+            this.button5.Text = "d=30 side=9";
+            this.button5.UseVisualStyleBackColor = true;
+            this.button5.Click += new System.EventHandler(this.button5_Click);
+            // 
+            // actionsToolStripMenuItem
+            // 
+            this.actionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.takeTimingsToolStripMenuItem,
+            this.printTimeEstimatesToolStripMenuItem});
+            this.actionsToolStripMenuItem.Name = "actionsToolStripMenuItem";
+            this.actionsToolStripMenuItem.Size = new System.Drawing.Size(59, 20);
+            this.actionsToolStripMenuItem.Text = "&Actions";
+            // 
+            // takeTimingsToolStripMenuItem
+            // 
+            this.takeTimingsToolStripMenuItem.Name = "takeTimingsToolStripMenuItem";
+            this.takeTimingsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.takeTimingsToolStripMenuItem.Text = "Print Timings";
+            this.takeTimingsToolStripMenuItem.Click += new System.EventHandler(this.takeTimingsToolStripMenuItem_Click);
+            // 
+            // printTimeEstimatesToolStripMenuItem
+            // 
+            this.printTimeEstimatesToolStripMenuItem.Name = "printTimeEstimatesToolStripMenuItem";
+            this.printTimeEstimatesToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.printTimeEstimatesToolStripMenuItem.Text = "Print Time Estimates";
+            this.printTimeEstimatesToolStripMenuItem.Click += new System.EventHandler(this.printTimeEstimatesToolStripMenuItem_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(809, 473);
+            this.ClientSize = new System.Drawing.Size(882, 608);
             this.Controls.Add(this.panel4);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.panel2);
@@ -432,10 +507,17 @@
         private System.Windows.Forms.ToolStripMenuItem open400X400ToolStripMenuItem;
         private System.Windows.Forms.TextBox tbSunRadius;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.CheckBox cbRaycastMulti;
         private System.Windows.Forms.ToolStripMenuItem synthesize8000X8000ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem synthesize400X400ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem synthesize10X10ToolStripMenuItem;
+        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button button4;
+        private System.Windows.Forms.Button button5;
+        private System.Windows.Forms.ToolStripMenuItem actionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem takeTimingsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem printTimeEstimatesToolStripMenuItem;
     }
 }
 

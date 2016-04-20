@@ -28,6 +28,9 @@ namespace Shadows2
                 case 3:
                     Application.Run(new RayTest());
                     break;
+                case 4:
+                    Application.Run(new TestStarts());
+                    break;
             }
         }
     }

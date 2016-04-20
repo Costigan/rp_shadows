@@ -76,7 +76,7 @@ namespace Shadow.terrain
             if (false)
                 starts = new List<Vector3>() { starts[10] };
 
-            var sideCount = 0;
+            var sideCount = 9;
             var rays = CalculateSunRays(sunPosVec, sideCount);
             var raysCount = rays.Count;
             var totalRayCount = starts.Count * raysCount;
@@ -439,7 +439,6 @@ namespace Shadow.terrain
                 for (var j = -radialCount; j <= radialCount; j++)
                 {
                     var p = new PointF(i * stepf, j * stepf);
-                    Console.WriteLine(@"p={0}", p);
                     var nearCorner = new PointF(stepf * Math.Max(0f, Math.Abs(i) - 0.5f), Math.Max(0f, stepf * Math.Abs(j) - 0.5f));
                     var nearDistance = origin.Distance(nearCorner);
                     if (nearDistance >= 1f)
@@ -484,6 +483,162 @@ namespace Shadow.terrain
         {
             return deg * 3.141592653f / 180f;
         }
+
+        #region Version 4
+
+        public void UpdateToSunV4(Vector3d sun1, 
+            float sunFraction = 1f,
+            float sunHalfAngle = (float)(0.25d * Math.PI / 180d),
+            float rayDensity = 1f,
+            int sunRaySideCount = 0)
+        {
+            var gridResolution = GridResolution;
+            var invGridResolution = 1f / gridResolution;
+            var step = gridResolution / rayDensity;
+            var gridCellArea = step * step;
+            var sunPosVec = new Vector3((float)sun1.X, (float)sun1.Y, (float)sun1.Z);
+
+            var ixmax = HeightMap.GetLength(0);
+            var iymax = HeightMap.GetLength(1);
+
+            var origin = new Vector3(0f, 0f, 0f);
+            var zAxis = new Vector3(0f, 0f, 1f);
+
+            var bounds = new RectangleF(MinPX, MinPY, MaxPX - MinPX, MaxPY - MinPY);
+
+            var starts = CalculateStartsV4(sunPosVec, step, bounds);
+            if (false)
+                starts = new List<Vector2>() { starts[10] };
+
+            var rays = CalculateSunRays(sunPosVec, sunRaySideCount);
+            var raysCount = rays.Count;
+            var totalRayCount = starts.Count * raysCount;
+            Console.WriteLine(@"totalRayCount={0}", totalRayCount);
+
+            var clipper = new LightingTriangleClipper();
+            clipper.Width = Width;
+            clipper.Height = Height;
+
+            var lightPerHit = 1f / (rayDensity * rayDensity * (1 + sunRaySideCount * sunRaySideCount));
+
+            var stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
+
+            Enumerable.Range(0, totalRayCount).AsParallel().ForAll(index =>
+            {
+                var startIndex = index / raysCount;
+                var rayIndex = index - startIndex * raysCount;
+                var p = starts[startIndex];
+                var ray = rays[rayIndex];
+                var toSun = ray.ToSun;
+                var walkVec = toSun.Xy.Normalized() * -step;
+
+                var cross = Vector3.Cross(toSun, zAxis);
+                var up = Vector3.Cross(-toSun, cross);
+                var m = Matrix4.LookAt(toSun, origin, up);
+
+                var pz = MinPZ;
+                var lastZTransformed = p.X * m.Row0.Y + p.Y * m.Row1.Y + pz * m.Row2.Y + 1f * m.Row3.Y;
+                var ix = (int)((p.X - MinPX) * invGridResolution);
+                var iy = (int)((p.Y - MinPY) * invGridResolution);
+
+                while (ix >= 0 && ix < ixmax && iy>=0 && iy< iymax)
+                {
+                    pz = InterpolatedHeightMap(p.X, p.Y, gridResolution, clipper.Width, clipper.Height);
+                    var pzTransformed = p.X * m.Row0.Y + p.Y * m.Row1.Y + pz * m.Row2.Y + 1f * m.Row3.Y;
+                    if (pzTransformed >= lastZTransformed)
+                    {
+                        // not sure how to handle equality here
+                        _shadowBuf[ix, iy] += lightPerHit;
+                        lastZTransformed = pzTransformed;
+                    }
+                    p += walkVec;
+                    ix = (int)((p.X - MinPX) * invGridResolution);
+                    iy = (int)((p.Y - MinPY) * invGridResolution);
+                }
+            });
+
+            stopwatch.Stop();
+            Console.WriteLine(@"Elapsed time={0}  time_per_ray={1} usec", stopwatch.Elapsed, (double)(1000L * stopwatch.ElapsedMilliseconds) / totalRayCount);
+        }
+
+        public List<Vector2> CalculateStartsV4(Vector3 sunPosVec, float stepSize, RectangleF bounds)
+        {
+            var flat = sunPosVec.Xy;
+            flat.Normalize();
+            var sunCorner = GetCornerV4(flat);
+
+            var halfStep = stepSize / 2f;
+            var stepVec = flat * -stepSize;
+
+            var starts = new List<Vector2>();
+            Vector2 start, edgeStep1, edgeStep2;
+
+            ConfigureStepVectors(sunCorner, bounds, stepVec, out start, out edgeStep1, out edgeStep2);
+
+            var p = start;
+            while (bounds.Contains(p.X, p.Y))
+            {
+                starts.Add(p);
+                p += edgeStep1;
+            }
+            p = start;
+            while (bounds.Contains(p.X, p.Y))
+            {
+                starts.Add(p);
+                p += edgeStep2;
+            }
+            return starts;
+        }
+
+        private void ConfigureStepVectors(CornerId sunCorner, RectangleF bounds, Vector2 stepVec, 
+            out Vector2 start, out Vector2 edgeStep1, out Vector2 edgeStep2)
+        {
+            var stepSize = stepVec.Length;
+            var halfStep = stepSize / 2f;
+            var stepDirection = stepVec.Normalized();
+
+            start =
+                sunCorner == CornerId.NN ? new Vector2(bounds.Left + halfStep, bounds.Top + halfStep) :
+                sunCorner == CornerId.NP ? new Vector2(bounds.Left + halfStep, bounds.Bottom - halfStep) :
+                sunCorner == CornerId.PN ? new Vector2(bounds.Right - halfStep, bounds.Top + halfStep) :
+                new Vector2(bounds.Right - halfStep, bounds.Bottom - halfStep);
+
+            switch (sunCorner)
+            {
+                case CornerId.NN:
+                    edgeStep1 = new Vector2(stepVec.Y == 0f ? float.MaxValue : stepSize / stepDirection.Y, 0f);
+                    edgeStep2 = new Vector2(0f, stepVec.X == 0f ? float.MaxValue : stepSize / stepDirection.X);
+                    break;
+                case CornerId.NP:
+                    edgeStep1 = new Vector2(stepVec.Y == 0f ? float.MaxValue : -stepSize / stepDirection.Y, 0f);
+                    edgeStep2 = new Vector2(0f, stepVec.X == 0f ? float.MinValue : -stepSize / stepDirection.X);
+                    break;
+                case CornerId.PN:
+                    edgeStep1 = new Vector2(stepVec.Y == 0f ? float.MinValue : -stepSize / stepDirection.Y, 0f);
+                    edgeStep2 = new Vector2(0f, stepVec.X == 0f ? float.MaxValue : -stepSize / stepDirection.X);
+                    break;
+                case CornerId.PP:
+                default:
+                    edgeStep1 = new Vector2(stepVec.Y == 0f ? float.MinValue : stepSize / stepDirection.Y, 0f);
+                    edgeStep2 = new Vector2(0f, stepVec.X == 0f ? float.MinValue : stepSize / stepDirection.X);
+                    break;
+            }
+        }
+
+        public CornerId GetCornerV4(Vector2 v)
+        {
+            if (v.X > 0f)
+                return (v.Y > 0f) ? CornerId.PP : CornerId.PN;
+            return (v.Y > 0f) ? CornerId.NP : CornerId.NN;
+        }
+
+        public Vector2 Copy(Vector2 f)
+        {
+            return new Vector2(f.X, f.Y);
+        }
+
+        #endregion Version 4
     }
 
     public struct SunRay

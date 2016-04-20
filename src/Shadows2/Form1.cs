@@ -23,7 +23,7 @@ namespace Shadows2
         public Terrain TheTerrain;
 
         public Bitmap Rendering;
-        float _azimuth = 90f, _elevation= 0.050f;
+        float _azimuth = 90f, _elevation = 0.050f;
 
         public Form1()
         {
@@ -40,7 +40,7 @@ namespace Shadows2
 
         private void trackElevation_Scroll(object sender, EventArgs e)
         {
-            _elevation = trackElevation.Value/100f;
+            _elevation = trackElevation.Value / 100f;
             tbElevation.Text = string.Format("{0:f3}", _elevation);
             if (autoUpdateAfterAzElChangeToolStripMenuItem.Checked)
                 UpdateToAzimuthAndElevation();
@@ -119,18 +119,6 @@ namespace Shadows2
             pictureBox1.Image = Rendering;
         }
 
-        void UpdateToAzimuthAndElevation()
-        {
-            var a = _azimuth * Math.PI / 180d;
-            var e = _elevation * Math.PI / 180d;
-            var z = Math.Sin(e);
-            var ec = Math.Cos(e);
-            var x = Math.Cos(a) * ec;
-            var y = Math.Sin(a) * ec;
-            var v = new Vector3d(x, y, z);
-            UpdateToSun(v);
-        }
-
         private void renderHeightFieldToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (TheTerrain == null) return;
@@ -204,7 +192,7 @@ namespace Shadows2
                 MinPZ = minz,
                 MaxPZ = maxz,
                 MinPX = 0f,
-                MaxPX = theTerrain.Width*theTerrain.GridResolution,
+                MaxPX = theTerrain.Width * theTerrain.GridResolution,
                 MinPY = 0f,
                 MaxPY = theTerrain.Height * theTerrain.GridResolution
             };
@@ -249,7 +237,7 @@ namespace Shadows2
             t.MinPZ = minz;
             t.MaxPZ = maxz;
             TheTerrain = t;
-            ShowBitmap(TheTerrain.HeightFieldToBitmap(Rendering)); 
+            ShowBitmap(TheTerrain.HeightFieldToBitmap(Rendering));
         }
 
         void SyntheticHeightMap(Terrain terrain)
@@ -269,7 +257,7 @@ namespace Shadows2
             var ymax = a.GetLength(1);
             var ystart = ymax / 2;
             for (var i = 0; i < xmax; i++)
-                for (var j = ystart; j < ystart+3; j++)
+                for (var j = ystart; j < ystart + 3; j++)
                     a[j, i] += height;
         }
 
@@ -278,9 +266,9 @@ namespace Shadows2
             var width = a.GetLength(0);
             var height = a.GetLength(1);
             var r = new Random();
-            for (var ix=0;ix< width;ix++)
-                for (var iy=0;iy< height;iy++)
-                    a[ix, iy] += (float)r.NextDouble()*range;
+            for (var ix = 0; ix < width; ix++)
+                for (var iy = 0; iy < height; iy++)
+                    a[ix, iy] += (float)r.NextDouble() * range;
         }
 
         void FakeCraters(float[,] a, int count, float maxRadius, float depth, RectangleF rect)
@@ -288,7 +276,7 @@ namespace Shadows2
             var width = a.GetLength(0);
             var height = a.GetLength(1);
             var r = new Random();
-            for (var i=0;i< count;i++)
+            for (var i = 0; i < count; i++)
             {
                 var radius = (float)r.NextDouble() * maxRadius;
                 var center = new PointF((float)r.NextDouble() * rect.Width, (float)r.NextDouble() * rect.Height);
@@ -338,7 +326,7 @@ namespace Shadows2
 
         private void tbScale_ValueChanged(object sender, EventArgs e)
         {
-            pictureBox1.Size = new Size(tbScale.Value*500, tbScale.Value*500);
+            pictureBox1.Size = new Size(tbScale.Value * 500, tbScale.Value * 500);
         }
 
         private void tbSunRadius_TextChanged(object sender, EventArgs e)
@@ -434,32 +422,103 @@ namespace Shadows2
             ShowBitmap(TheTerrain.HeightFieldToBitmap(Rendering));
         }
 
-        void UpdateToSun(Vector3d v)
+        private void button1_Click(object sender, EventArgs e)
+        {
+            UpdateToAzimuthAndElevation(10f, 3);
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            UpdateToAzimuthAndElevation(10f, 7);
+        }
+
+        void UpdateToAzimuthAndElevation(float rayDensity = 1f, int sunRaySideCount = 0)
+        {
+            UpdateToSun(ToSun(), rayDensity, sunRaySideCount);
+        }
+
+        public Vector3d ToSun()
+        {
+            var a = _azimuth * Math.PI / 180d;
+            var e = _elevation * Math.PI / 180d;
+            var z = Math.Sin(e);
+            var ec = Math.Cos(e);
+            var x = Math.Cos(a) * ec;
+            var y = Math.Sin(a) * ec;
+            return new Vector3d(x, y, z);
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            UpdateToAzimuthAndElevation(10f, 0);
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            UpdateToAzimuthAndElevation(30f, 0);
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            UpdateToAzimuthAndElevation(30f, 9);
+        }
+
+        private void takeTimingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var stopwatch = new System.Diagnostics.Stopwatch();
+            for (var rayDensity = 1f; rayDensity < 20f; rayDensity += 1f)
+            {
+                stopwatch.Reset();
+                stopwatch.Start();
+                UpdateToAzimuthAndElevation(rayDensity, 0);
+                stopwatch.Stop();
+                var totalRayCount = EstimateRayCount(rayDensity, 0);
+                var timePerMicrosecond = (double)(1000L * stopwatch.ElapsedMilliseconds) / totalRayCount;
+                Console.WriteLine("{0}\t{1}", rayDensity, timePerMicrosecond);
+            }
+        }
+
+        int EstimateRayCount(float rayDensity, int sunRaySideCount)
+        {
+            var bounds = new RectangleF(TheTerrain.MinPX, TheTerrain.MinPY, TheTerrain.MaxPX - TheTerrain.MinPX, TheTerrain.MaxPY - TheTerrain.MinPY);
+            var step = TheTerrain.GridResolution / rayDensity;
+            var sun1 = ToSun();
+            var sunPosVec = new Vector3((float)sun1.X, (float)sun1.Y, (float)sun1.Z);
+            var starts = TheTerrain.CalculateStartsV4(sunPosVec, step, bounds);
+            var rays = TheTerrain.CalculateSunRays(sunPosVec, sunRaySideCount);
+            var totalRayCount = starts.Count * rays.Count;
+            return totalRayCount;
+        }
+
+        float EstimateRunTime(float rayDensity, int sunRaySideCount)
+        {
+            var x = rayDensity;
+            var microsecPerRay = 0.0935f * x * x + 5.4686f * x + 12.112f;
+            var totalRayCount = EstimateRayCount(rayDensity, sunRaySideCount);
+            var totalMicroseconds = microsecPerRay * totalRayCount;
+            var seconds = totalMicroseconds / 1000000f;
+            return seconds;
+        }
+
+        private void printTimeEstimatesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Console.WriteLine(@"estimate({0},{1}) => {2}", 1f, 0, EstimateRunTime(1f, 0));
+            Console.WriteLine(@"estimate({0},{1}) => {2}", 10f, 0, EstimateRunTime(10f, 0));
+            Console.WriteLine(@"estimate({0},{1}) => {2}", 30f, 0, EstimateRunTime(30f, 0));
+            Console.WriteLine(@"estimate({0},{1}) => {2}", 10f, 3, EstimateRunTime(10f, 3));
+            Console.WriteLine(@"estimate({0},{1}) => {2}", 10f, 7, EstimateRunTime(10f, 7));
+            Console.WriteLine(@"estimate({0},{1}) => {2}", 30f, 9, EstimateRunTime(30f, 9));
+        }
+
+        void UpdateToSun(Vector3d v, float rayDensity = 1f, int sunRaySideCount = 0)
         {
             if (TheTerrain == null) return;
             TheTerrain.Clear();
 
-            if (!cbRaycastMulti.Checked)
-            {
-                TheTerrain.UpdateToSunV3(v);
-            }
-            else
-            {
-                double sunRadiusDeg;
-                if (!double.TryParse(tbSunRadius.Text, out sunRadiusDeg)) return;
-                TheTerrain.UpdateToSunV3(v, 0.5f);
-                var axis = new Vector3d(0f, 0f, 1f);
-                var angle = (sunRadiusDeg * Math.PI / 180d);
-                var v0 = new Vector4d(v);
-                var m1 = Matrix4d.CreateFromAxisAngle(axis, angle);
-                var v1 = Vector4d.Transform(v0, m1);
-                var m2 = Matrix4d.CreateFromAxisAngle(axis, -angle);
-                var v2 = Vector4d.Transform(v0, m2);
-                TheTerrain.UpdateToSunV3(new Vector3d(v1), 0.25f, 0f);
-                TheTerrain.UpdateToSunV3(new Vector3d(v2), 0.25f, 0f);
-            }
+            TheTerrain.UpdateToSunV4(v, 1f, (float)(0.25d * Math.PI / 180d), rayDensity, sunRaySideCount);
 
             ShowBitmap(TheTerrain.ShadowBufferToScaledImageV4(Rendering));
+            Console.WriteLine(@"Done.");
         }
 
     }

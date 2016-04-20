@@ -89,6 +89,12 @@
       <DependentUpon>RayTest.cs</DependentUpon>
     </Compile>
     <Compile Include="terrain\Terrain.cs" />
+    <Compile Include="TestStarts.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TestStarts.Designer.cs">
+      <DependentUpon>TestStarts.cs</DependentUpon>
+    </Compile>
     <Compile Include="TriangleTests.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -111,6 +117,9 @@
     </Compile>
     <EmbeddedResource Include="RayTest.resx">
       <DependentUpon>RayTest.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TestStarts.resx">
+      <DependentUpon>TestStarts.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="TriangleTests.resx">
       <DependentUpon>TriangleTests.cs</DependentUpon>
