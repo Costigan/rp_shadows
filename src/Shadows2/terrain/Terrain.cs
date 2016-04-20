@@ -76,7 +76,7 @@ namespace Shadow.terrain
             if (false)
                 starts = new List<Vector3>() { starts[10] };
 
-            var sideCount = 9;
+            var sideCount = 0;
             var rays = CalculateSunRays(sunPosVec, sideCount);
             var raysCount = rays.Count;
             var totalRayCount = starts.Count * raysCount;

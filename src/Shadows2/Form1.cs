@@ -23,7 +23,7 @@ namespace Shadows2
         public Terrain TheTerrain;
 
         public Bitmap Rendering;
-        float _azimuth = 0f, _elevation= 0.050f;
+        float _azimuth = 90f, _elevation= 0.050f;
 
         public Form1()
         {
