@@ -490,7 +490,8 @@ namespace Shadow.terrain
             float sunFraction = 1f,
             float sunHalfAngle = (float)(0.25d * Math.PI / 180d),
             float rayDensity = 1f,
-            int sunRaySideCount = 0)
+            int sunRayVerticalCount = 0,
+            int sunRayHorizontalCount = 0)
         {
             var gridResolution = GridResolution;
             var invGridResolution = 1f / gridResolution;
@@ -510,7 +511,7 @@ namespace Shadow.terrain
             if (false)
                 starts = new List<Vector2>() { starts[10] };
 
-            var rays = CalculateSunRays(sunPosVec, sunRaySideCount);
+            var rays = CalculateSunRaysV4(sunPosVec, sunRayVerticalCount, sunRayHorizontalCount);
             var raysCount = rays.Count;
             var totalRayCount = starts.Count * raysCount;
             Console.WriteLine(@"totalRayCount={0}", totalRayCount);
@@ -519,7 +520,7 @@ namespace Shadow.terrain
             clipper.Width = Width;
             clipper.Height = Height;
 
-            var lightPerHit = 1f / (rayDensity * rayDensity * (1 + sunRaySideCount * sunRaySideCount));
+            var lightPerHit = 1f / (rayDensity * rayDensity * (1 + sunRayVerticalCount * sunRayVerticalCount));
 
             var stopwatch = new System.Diagnostics.Stopwatch();
             stopwatch.Start();
@@ -624,6 +625,78 @@ namespace Shadow.terrain
                     edgeStep2 = new Vector2(0f, stepVec.X == 0f ? float.MinValue : stepSize / stepDirection.X);
                     break;
             }
+        }
+
+        /// <summary>
+        /// This version doesn't use the same steps horizontally as vertically
+        /// </summary>
+        /// <param name="toSun"></param>
+        /// <param name="horizontalCount"></param>
+        /// <returns></returns>
+        public List<SunRay> CalculateSunRaysV4(Vector3 toSun, int verticalCount, int horizontalCount = -1)
+        {
+            const float sunRadiusDeg = 0.25f;
+            float sunRadiusRad = DegToRad(sunRadiusDeg);
+
+            if (verticalCount < 0)
+                verticalCount = horizontalCount;
+
+            var toSun4 = new Vector4(toSun);
+
+            var zAxis = new Vector3(0f, 0f, 1f);
+            var sunInPlane = new Vector3(toSun.Xy);
+            var rotateSunInPlane = Matrix4.CreateFromAxisAngle(zAxis, DegToRad(90f));
+            var upDownAxis4 = Vector4.Transform(new Vector4(toSun.Xy), rotateSunInPlane);
+            var upDownAxis = new Vector3(upDownAxis4);
+
+            var vSteps = 2 * horizontalCount + 1;
+            var vStepf = 2f / vSteps;
+            var hSteps = 2 * verticalCount + 1;
+            var hStepf = 2f / hSteps;
+            var origin = new PointF(0f, 0f);
+            var rays = new List<SunRay>();
+            for (var i = -horizontalCount; i <= horizontalCount; i++)  // horizontal 
+                for (var j = -verticalCount; j <= verticalCount; j++)  // vertical
+                {
+                    var p = new PointF(i * vStepf, j * hStepf);
+                    var nearCorner = new PointF(vStepf * Math.Max(0f, Math.Abs(i) - 0.5f), Math.Max(0f, hStepf * Math.Abs(j) - 0.5f));
+                    var nearDistance = origin.Distance(nearCorner);
+                    if (nearDistance >= 1f)
+                        continue;
+
+                    // Calculate the ray by rotating the initial ray
+                    var farCorner = new PointF(vStepf * Math.Abs(i) + 0.5f, hStepf * Math.Abs(j) + 0.5f);
+                    Matrix4 rotate1;
+                    Matrix4.CreateFromAxisAngle(zAxis, i * vStepf * sunRadiusRad, out rotate1);
+                    Matrix4 rotate2;
+                    Matrix4.CreateFromAxisAngle(upDownAxis, j * hStepf * sunRadiusRad, out rotate2);
+                    Matrix4 product;
+                    Matrix4.Mult(ref rotate1, ref rotate2, out product);  // Not sure about the order here
+                    var transformedToSun = Vector4.Transform(toSun4, product);
+
+                    // How much of the square is covered
+                    var farDistance = origin.Distance(farCorner);
+                    if (farDistance <= 1f)
+                    {
+                        var v = new Vector3(transformedToSun);
+                        v.Normalize();
+                        rays.Add(new SunRay { ToSun = v, SunFraction = 1f });  // Will normalize later
+                    }
+                    else
+                    {
+                        var fraction = (1f - nearDistance) / (farDistance - nearDistance);
+                        if (fraction > 0.25f)  // Just clip if the ray is too far outside the sun
+                        {
+                            var v = new Vector3(transformedToSun);
+                            v.Normalize();
+                            rays.Add(new SunRay { ToSun = v, SunFraction = fraction });
+                        }
+                    }
+                }
+
+            var sum = rays.Sum(r => r.SunFraction);
+            var normalizedRays = rays.Select(r => new SunRay { ToSun = r.ToSun, SunFraction = r.SunFraction / sum }).ToList();
+            return normalizedRays;
         }
 
         public CornerId GetCornerV4(Vector2 v)

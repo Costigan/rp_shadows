@@ -50,9 +50,11 @@ namespace Shadows2
         {
             var terrain = new Terrain();
             var toSun = new Vector3(1f, 0f, 0f);
-            int radialCount;
-            if (!int.TryParse(tbSideCount.Text, out radialCount)) return;
-            SunRays = terrain.CalculateSunRays(toSun, radialCount);
+            int verticalCount;
+            if (!int.TryParse(tbVerticalCount.Text, out verticalCount)) return;
+            int horizontalCount;
+            if (!int.TryParse(tbHorizontalCount.Text, out horizontalCount)) return;
+            SunRays = terrain.CalculateSunRaysV4(toSun, verticalCount, horizontalCount);
             Console.WriteLine(@"There are {0} rays", SunRays.Count);
             panel1.Invalidate();
 

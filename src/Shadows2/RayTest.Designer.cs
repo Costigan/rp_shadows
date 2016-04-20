@@ -30,8 +30,10 @@
         {
             this.panel1 = new System.Windows.Forms.Panel();
             this.button1 = new System.Windows.Forms.Button();
-            this.tbSideCount = new System.Windows.Forms.TextBox();
+            this.tbVerticalCount = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.tbHorizontalCount = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // panel1
@@ -45,7 +47,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(12, 59);
+            this.button1.Location = new System.Drawing.Point(241, 12);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 1;
@@ -53,30 +55,49 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
-            // tbSideCount
+            // tbVerticalCount
             // 
-            this.tbSideCount.Location = new System.Drawing.Point(53, 9);
-            this.tbSideCount.Name = "tbSideCount";
-            this.tbSideCount.Size = new System.Drawing.Size(100, 20);
-            this.tbSideCount.TabIndex = 2;
-            this.tbSideCount.Text = "0";
+            this.tbVerticalCount.Location = new System.Drawing.Point(73, 9);
+            this.tbVerticalCount.Name = "tbVerticalCount";
+            this.tbVerticalCount.Size = new System.Drawing.Size(100, 20);
+            this.tbVerticalCount.TabIndex = 2;
+            this.tbVerticalCount.Text = "0";
             // 
             // label1
             // 
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(12, 12);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(35, 13);
+            this.label1.Size = new System.Drawing.Size(42, 13);
             this.label1.TabIndex = 3;
-            this.label1.Text = "label1";
+            this.label1.Text = "Vertical";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(13, 38);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(54, 13);
+            this.label2.TabIndex = 3;
+            this.label2.Text = "Horizontal";
+            // 
+            // tbHorizontalCount
+            // 
+            this.tbHorizontalCount.Location = new System.Drawing.Point(73, 35);
+            this.tbHorizontalCount.Name = "tbHorizontalCount";
+            this.tbHorizontalCount.Size = new System.Drawing.Size(100, 20);
+            this.tbHorizontalCount.TabIndex = 2;
+            this.tbHorizontalCount.Text = "0";
             // 
             // RayTest
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(512, 566);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
-            this.Controls.Add(this.tbSideCount);
+            this.Controls.Add(this.tbHorizontalCount);
+            this.Controls.Add(this.tbVerticalCount);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.panel1);
             this.Name = "RayTest";
@@ -90,7 +111,9 @@
 
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.TextBox tbSideCount;
+        private System.Windows.Forms.TextBox tbVerticalCount;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox tbHorizontalCount;
     }
 }

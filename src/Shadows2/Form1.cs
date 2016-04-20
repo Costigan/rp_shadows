@@ -432,9 +432,9 @@ namespace Shadows2
             UpdateToAzimuthAndElevation(10f, 7);
         }
 
-        void UpdateToAzimuthAndElevation(float rayDensity = 1f, int sunRaySideCount = 0)
+        void UpdateToAzimuthAndElevation(float rayDensity = 1f, int sunRayVerticalCount = 0, int sunRayHorizontalCount = 0)
         {
-            UpdateToSun(ToSun(), rayDensity, sunRaySideCount);
+            UpdateToSun(ToSun(), rayDensity, sunRayVerticalCount, sunRayHorizontalCount);
         }
 
         public Vector3d ToSun()
@@ -510,12 +510,39 @@ namespace Shadows2
             Console.WriteLine(@"estimate({0},{1}) => {2}", 30f, 9, EstimateRunTime(30f, 9));
         }
 
-        void UpdateToSun(Vector3d v, float rayDensity = 1f, int sunRaySideCount = 0)
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (Rendering == null)
+            {
+                Console.WriteLine(@"No bitmap has been created yet.");
+                return;
+            }
+            var d = new SaveFileDialog() { DefaultExt = ".png" };
+            if (d.ShowDialog() != DialogResult.OK) return;
+            Rendering.Save(d.FileName);
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            UpdateToAzimuthAndElevation(1f, 9);
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            UpdateToAzimuthAndElevation(1f, 20, 1);
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            UpdateToAzimuthAndElevation(20f, 20, 5);
+        }
+
+        void UpdateToSun(Vector3d v, float rayDensity = 1f, int sunRayVerticalCount = 0, int sunRayHorizontalCount = 0)
         {
             if (TheTerrain == null) return;
             TheTerrain.Clear();
 
-            TheTerrain.UpdateToSunV4(v, 1f, (float)(0.25d * Math.PI / 180d), rayDensity, sunRaySideCount);
+            TheTerrain.UpdateToSunV4(v, 1f, (float)(0.25d * Math.PI / 180d), rayDensity, sunRayVerticalCount, sunRayHorizontalCount);
 
             ShowBitmap(TheTerrain.ShadowBufferToScaledImageV4(Rendering));
             Console.WriteLine(@"Done.");
