@@ -70,11 +70,12 @@ namespace Shadow.terrain
             var origin = new Vector3(0f, 0f, 0f);
             var zAxis = new Vector3(0f, 0f, 1f);
 
-            var starts = CalculateStartsV3(sunPosVec, gridResolution);
+            var bounds = new RectangleF(MinPX, MinPY, MaxPX - MinPX, MaxPY - MinPY);
+            var starts = CalculateStartsV4(sunPosVec, gridResolution, bounds);
             //if (SingleRay)
             //    starts = new List<Vector3> { starts[(int)((starts.Count - 1) * RayFraction)] };
             if (false)
-                starts = new List<Vector3>() { starts[10] };
+                starts = new List<Vector2>() { starts[10] };
 
             var sideCount = 9;
             var rays = CalculateSunRays(sunPosVec, sideCount);
@@ -130,7 +131,7 @@ namespace Shadow.terrain
                 {
                     var x = startX + walkVec.X * i;
                     var y = startY + walkVec.Y * i;
-                    var z = InterpolatedHeightMap(x, y, resolution, clipper.Width, clipper.Height);
+                    var z = InterpolatedHeightMapV4(x, y, resolution, clipper.Width, clipper.Height);
                     var nextZTransformed = x * m.Row0.Y + y * m.Row1.Y + z * m.Row2.Y + 1f * m.Row3.Y;
 
                     //if (z > 0f)
@@ -391,7 +392,6 @@ namespace Shadow.terrain
                 }
             Console.WriteLine(@"maxv={0}", maxv);
 
-            const byte white = 255;
             var bitmapData = result.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, PixelFormat.Format8bppIndexed);
             unsafe
             {
@@ -545,17 +545,24 @@ namespace Shadow.terrain
 
                 while (ix >= 0 && ix < ixmax && iy>=0 && iy< iymax)
                 {
-                    pz = InterpolatedHeightMap(p.X, p.Y, gridResolution, clipper.Width, clipper.Height);
+                    pz = InterpolatedHeightMapV4(p.X, p.Y, gridResolution, clipper.Width, clipper.Height);
                     var pzTransformed = p.X * m.Row0.Y + p.Y * m.Row1.Y + pz * m.Row2.Y + 1f * m.Row3.Y;
+
+                    // Debugging
+                    //Console.Write(@"[{0},{1}]", ix, iy);
+
                     if (pzTransformed >= lastZTransformed)
                     {
                         // not sure how to handle equality here
                         _shadowBuf[ix, iy] += lightPerHit;
                         lastZTransformed = pzTransformed;
+
+                        //Console.Write(@"  lit");
                     }
                     p += walkVec;
                     ix = (int)((p.X - MinPX) * invGridResolution);
                     iy = (int)((p.Y - MinPY) * invGridResolution);
+                    //Console.WriteLine();
                 }
             });
 
@@ -704,6 +711,30 @@ namespace Shadow.terrain
             if (v.X > 0f)
                 return (v.Y > 0f) ? CornerId.PP : CornerId.PN;
             return (v.Y > 0f) ? CornerId.NP : CornerId.NN;
+        }
+
+
+        float InterpolatedHeightMapV4(float xTerrain, float yTerrain, float frameStep, int xmax, int ymax)
+        {
+            // xTerrain,yTerrain is in units of meters.
+            // x,y is in units of grid cells
+            var x = (xTerrain - MinPX) / frameStep;
+            var y = (yTerrain - MinPX) / frameStep;
+            var x1 = (int)x;
+            var y1 = (int)y;
+            var x2 = x1 + 1;
+            var y2 = y1 + 1;
+
+            if (x1 < 0 || y1 < 0 || x2 >= xmax || y2 >= ymax)  // Do nothing for now
+                return float.MinValue;
+
+            var f11 = HeightMap[x1, y1];
+            var f12 = HeightMap[x1, y2];
+            var f21 = HeightMap[x2, y1];
+            var f22 = HeightMap[x2, y2];
+
+            var sz = (f11 * (x2 - x) * (y2 - y) + f21 * (x - x1) * (y2 - y) + f12 * (x2 - x) * (y - y1) + f22 * (x - x1) * (y - y1));
+            return sz;
         }
 
         public Vector2 Copy(Vector2 f)
