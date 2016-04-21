@@ -57,7 +57,12 @@ namespace Shadow.terrain
         /// This version uses bilinear interpolation
         /// </summary>
         /// <param name="sun1"></param>
-        public void UpdateToSunV3(Vector3d sun1, float sunFraction = 1f, float sunHalfAngle = (float)(0.25d * Math.PI / 180d))
+        public void UpdateToSunV3(Vector3d sun1,
+            float sunFraction = 1f,
+            float sunHalfAngle = (float)(0.25d * Math.PI / 180d),
+            float rayDensity = 1f,
+            int sunRayVerticalCount = 0,
+            int sunRayHorizontalCount = 0)
         {
             var gridResolution = GridResolution;
             var step = 1f * gridResolution; // was 0.75 of the resolution of the grid
@@ -77,10 +82,16 @@ namespace Shadow.terrain
             if (false)
                 starts = new List<Vector2>() { starts[10] };
 
-            var sideCount = 9;
-            var rays = CalculateSunRays(sunPosVec, sideCount);
+            var rays = CalculateSunRaysV4(sunPosVec, sunRayVerticalCount, sunRayHorizontalCount);
             var raysCount = rays.Count;
             var totalRayCount = starts.Count * raysCount;
+
+            Console.WriteLine(@"totalRayCount={0}", totalRayCount);
+            const float SecondsPerRay = 6761f / 1000000f;
+            Console.WriteLine(@"Estimated time: {0}", new TimeSpan(0, 0, (int)(SecondsPerRay * totalRayCount)));
+
+            var stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
 
             Enumerable.Range(0, totalRayCount).AsParallel().ForAll(index =>
             {
@@ -119,13 +130,11 @@ namespace Shadow.terrain
                 clipper.InvertedGridCellArea = 1f / gridCellArea;
 
                 var max = ixmax + iymax;
-                var six = (int)Math.Round((s.X - MinPX) / resolution);
-                var siy = (int)Math.Round((s.Y - MinPY) / resolution);
-                if (six < 0 || six >= ixmax || siy < 0 || siy >= iymax)
-                    throw new Exception(@"start is out of bounds");
                 var startX = s.X;
                 var startY = s.Y;
-                var pz = HeightMap[six, siy];  // not interpolated
+
+                var pz = MinPZ;
+
                 var lastZTransformed = startX * m.Row0.Y + startY * m.Row1.Y + pz * m.Row2.Y + 1f * m.Row3.Y;
                 for (var i = 1; i < max; i++)
                 {
@@ -146,6 +155,9 @@ namespace Shadow.terrain
                     }
                 }
             });
+
+            stopwatch.Stop();
+            Console.WriteLine(@"Elapsed time={0}  time_per_ray={1} usec", stopwatch.Elapsed, (double)(1000L * stopwatch.ElapsedMilliseconds) / totalRayCount);
         }
 
         float InterpolatedHeightMap(float x, float y, float frameStep, int xmax, int ymax)
@@ -217,11 +229,6 @@ namespace Shadow.terrain
                     {
                         rect.X = ix * clipper.GridResolution;
                         rect.Y = iy * clipper.GridResolution;
-
-                        if (ix == 100 && iy == 100)
-                        {
-                            Console.WriteLine(@"Clipping to rect {0}", rect);
-                        }
 
                         clipper.AddLight(triangle1, rect, ix, iy, halfSun * clipper.InvertedGridCellArea);
                         clipper.AddLight(triangle2, rect, ix, iy, halfSun * clipper.InvertedGridCellArea);

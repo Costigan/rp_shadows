@@ -311,21 +311,8 @@ namespace Shadows.math
 
         public override void Handler(Triangle t, RectangleF r)
         {
-            /*
-            if (GridCellX == 100 && GridCellY == 100)
-            {
-                Console.WriteLine(@"r={0}", r);
-                Console.WriteLine(@"  t={0} currentValue={1}", t, ShadowArray[GridCellX, GridCellY]);
-                Console.WriteLine(@"  HalfSun={0} t.Area={1}", HalfSun, t.Area);
-                Console.WriteLine(@"  incrementedValue={0}", ShadowArray[GridCellX, GridCellY] + HalfSun * t.Area);
-            }
-            */
-
             var increment = HalfSunDividedByGridCellArea * t.Area;
             ShadowArray[GridCellX, GridCellY] += increment;
-
-            if (GridCellX == 100 && GridCellY == 100)
-                Console.WriteLine(increment);
         }
     }
 }

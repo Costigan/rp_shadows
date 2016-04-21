@@ -537,12 +537,18 @@ namespace Shadows2
             UpdateToAzimuthAndElevation(20f, 20, 5);
         }
 
+        private void button9_Click(object sender, EventArgs e)
+        {
+            UpdateToAzimuthAndElevation(4f, 10, 2);
+        }
+
         void UpdateToSun(Vector3d v, float rayDensity = 1f, int sunRayVerticalCount = 0, int sunRayHorizontalCount = 0)
         {
             if (TheTerrain == null) return;
             TheTerrain.Clear();
 
-            TheTerrain.UpdateToSunV4(v, 1f, (float)(0.25d * Math.PI / 180d), rayDensity, sunRayVerticalCount, sunRayHorizontalCount);
+            TheTerrain.UpdateToSunV3(v, 1f, (float)(0.25d * Math.PI / 180d), rayDensity, sunRayVerticalCount, sunRayHorizontalCount);
+            //TheTerrain.UpdateToSunV4(v, 1f, (float)(0.25d * Math.PI / 180d), rayDensity, sunRayVerticalCount, sunRayHorizontalCount);
 
             ShowBitmap(TheTerrain.ShadowBufferToScaledImageV4(Rendering));
             Console.WriteLine(@"Done.");
