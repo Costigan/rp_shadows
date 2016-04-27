@@ -27,13 +27,20 @@ void main (void)
 
   vec4 color =
 		// Ambient : simulates indirect lighting
-		MaterialAmbientColor * gl_LightSource[0].ambient +
+		MaterialAmbientColor * gl_LightSource[0].ambient
 		// Diffuse : "color" of the object
-		MaterialDiffuseColor * gl_LightSource[0].diffuse * lambertTerm +   // * gl_FrontMaterial.diffuse
+		+ MaterialDiffuseColor * gl_LightSource[0].diffuse * lambertTerm   // * gl_FrontMaterial.diffuse
 		// Specular : reflective highlight, like a mirror
-		MaterialSpecularColor * gl_LightSource[0].specular * specularFactor;
+//		+ MaterialSpecularColor * gl_LightSource[0].specular * specularFactor;
+;
+
+// Forget specular for now.
 
   gl_FragColor = color;
+//  gl_FragColor = vec4(1, 0, 0, 1);
+
+    // This sort of works
+//    gl_FragColor = MaterialDiffuseColor;
 
   //if (gl_LightSource[0].ambient[0] > 0.5)
   //gl_FragColor = vec4(1, 0, 0, 1);

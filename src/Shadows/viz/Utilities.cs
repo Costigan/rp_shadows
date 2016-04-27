@@ -14,7 +14,7 @@ namespace Shadow.viz
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct Vertex
     {
-        // mimic InterleavedArrayFormat.T2fN3fV3f
+        public const InterleavedArrayFormat Format = InterleavedArrayFormat.T2fN3fV3f;
         public Vector2 TexCoord;
         public Vector3 Normal;
         public Vector3 Position;
@@ -23,8 +23,12 @@ namespace Shadow.viz
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct VertexNormal
     {
-        // mimic InterleavedArrayFormat.N3fV3f
+        public const InterleavedArrayFormat Format = InterleavedArrayFormat.N3fV3f;
         public Vector3 Normal;
         public Vector3 Position;
+        public override string ToString()
+        {
+            return string.Format(@"<p={0} n={1}>", Position, Normal);
+        }
     }
 }

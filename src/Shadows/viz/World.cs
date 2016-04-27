@@ -14,6 +14,7 @@ namespace Shadow.viz
 
         public Ball Sun;
         public Ball CentralBall;
+        public TerrainPatch Patch;
 
         public long Time
         {

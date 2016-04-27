@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shadows", "Shadows\Shadows.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shadows2", "Shadows2\Shadows2.csproj", "{2809BB30-1452-4385-8EFB-618553A780A8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{52B14990-89DD-409F-A126-E105CCE431E1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,14 @@ Global
 		{2809BB30-1452-4385-8EFB-618553A780A8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2809BB30-1452-4385-8EFB-618553A780A8}.Release|x64.ActiveCfg = Release|Any CPU
 		{2809BB30-1452-4385-8EFB-618553A780A8}.Release|x64.Build.0 = Release|Any CPU
+		{52B14990-89DD-409F-A126-E105CCE431E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52B14990-89DD-409F-A126-E105CCE431E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52B14990-89DD-409F-A126-E105CCE431E1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{52B14990-89DD-409F-A126-E105CCE431E1}.Debug|x64.Build.0 = Debug|Any CPU
+		{52B14990-89DD-409F-A126-E105CCE431E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52B14990-89DD-409F-A126-E105CCE431E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52B14990-89DD-409F-A126-E105CCE431E1}.Release|x64.ActiveCfg = Release|Any CPU
+		{52B14990-89DD-409F-A126-E105CCE431E1}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

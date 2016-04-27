@@ -48,6 +48,24 @@ namespace Shadow.terrain
             return new Vector3(f.X, f.Y, 0f);
         }
 
+        /// <summary>
+        /// Return the 3d height field location for a given x,y value
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public Vector3 PointAt(int x, int y)
+        {
+            var deltaX = (MaxPX - MinPX);
+            var deltaY = (MaxPY - MinPY);
+            var avgX = (MaxPX + MinPX) / 2f;
+            var avgY = (MaxPY + MinPY) / 2f;
+            var avgZ = (MaxPZ + MinPZ) / 2f;
+            var x1 = ((float)x) / (HeightMap.GetLength(0) - 1);
+            var y1 = ((float)y) / (HeightMap.GetLength(1) - 1);
+            return new Vector3(MinPX + x1 * deltaX - avgX, MinPY + y1 * deltaY - avgY, HeightMap[x, y] - avgZ);
+        }
+
         public void Clear()
         {
             Array.Clear(ShadowBuf, 0, ShadowBuf.Length);

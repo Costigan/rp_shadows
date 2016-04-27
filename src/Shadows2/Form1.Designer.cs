@@ -74,6 +74,7 @@
             this.tbAzimuth = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.panel4 = new System.Windows.Forms.Panel();
+            this.open2000X2000ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel2.SuspendLayout();
@@ -105,6 +106,7 @@
             this.open400X400ToolStripMenuItem,
             this.open500X500ToolStripMenuItem,
             this.open1000X1000ToolStripMenuItem,
+            this.open2000X2000ToolStripMenuItem,
             this.toolStripSeparator1,
             this.synthesize10X10ToolStripMenuItem,
             this.synthesize400X400ToolStripMenuItem,
@@ -222,6 +224,8 @@
             // 
             // autoUpdateAfterAzElChangeToolStripMenuItem
             // 
+            this.autoUpdateAfterAzElChangeToolStripMenuItem.Checked = true;
+            this.autoUpdateAfterAzElChangeToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.autoUpdateAfterAzElChangeToolStripMenuItem.Name = "autoUpdateAfterAzElChangeToolStripMenuItem";
             this.autoUpdateAfterAzElChangeToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
             this.autoUpdateAfterAzElChangeToolStripMenuItem.Text = "Auto Update after Az/El change";
@@ -512,6 +516,13 @@
             this.panel4.Size = new System.Drawing.Size(728, 499);
             this.panel4.TabIndex = 4;
             // 
+            // open2000X2000ToolStripMenuItem
+            // 
+            this.open2000X2000ToolStripMenuItem.Name = "open2000X2000ToolStripMenuItem";
+            this.open2000X2000ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.open2000X2000ToolStripMenuItem.Text = "Open 2000 x 2000";
+            this.open2000X2000ToolStripMenuItem.Click += new System.EventHandler(this.open2000X2000ToolStripMenuItem_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -588,6 +599,7 @@
         private System.Windows.Forms.Button button7;
         private System.Windows.Forms.Button button8;
         private System.Windows.Forms.Button button9;
+        private System.Windows.Forms.ToolStripMenuItem open2000X2000ToolStripMenuItem;
     }
 }
 

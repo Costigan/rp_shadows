@@ -12,6 +12,8 @@ using System.Windows.Forms;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using Shadow.spice;
+using System.Windows.Media.Imaging;
+using System.IO;
 
 namespace Shadows
 {
@@ -27,6 +29,10 @@ namespace Shadows
         public ShaderProgram MoonShader;
         public PhongRejection1 MoonShaderPhongRejection1;
         public ShaderProgram MoonShaderTexturedPhong;
+
+        const int bytesPerPixel = 4; // This constant must correspond with the pixel format of the converted bitmap.
+        public Terrain TheTerrain;
+
 
         public TerrainViz()
         {
@@ -71,9 +77,9 @@ namespace Shadows
             GL.ShadeModel(ShadingModel.Smooth);
 
             // Enable Light 0 and set its parameters.
-            //GL.Light(LightName.Light0, LightParameter.Position, SunPosition);
+            GL.Light(LightName.Light0, LightParameter.Position, new[] { 1000f, 1000f, 100f } );
 
-            const float ambient = 0.35f;
+            const float ambient = 0.5f;
             const float diffuse = 1f;
 
             GL.Light(LightName.Light0, LightParameter.Ambient, new[] { ambient, ambient, ambient, 1.0f });
@@ -102,7 +108,7 @@ namespace Shadows
             long t = TimeUtilities.DateTimeToTime42(new DateTime(2022, 6, 1));
             TheWorld.Update(t);
 
-            if (false)
+            if (true)
             {
                 Viewport.CameraMode = new ArcBall(Viewport, TheWorld.CentralBall)
                 {
@@ -162,7 +168,6 @@ namespace Shadows
             TheWorld.NearShapes.Add(flat);
         }
 
-
         private void viewport_Paint(object sender, PaintEventArgs e)
         {
             if (!Viewport.Loaded) return;
@@ -181,5 +186,167 @@ namespace Shadows
             }
         }
 
+        private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var filename = @"C:\git\rp_shadows\data\synthetic-lunar-patch.tif";
+            LoadFileToHeightField(filename);
+            var patch = new TerrainPatch
+            {
+                TheTerrain = TheTerrain,
+                Bounds = new Rectangle(0, 0, 2000, 2000),
+                TextureFilename = @"C:\git\rp_shadows\data\lightmap-2000x2000-az245el0.14.png",
+                Shader = MoonShaderTexturedPhong
+            };
+            patch.Load();
+            TheWorld.NearShapes.Add(patch);
+            TheWorld.Patch = patch;
+            TheWorld.Patch.DrawLines = false;
+            foreach (var flat in TheWorld.NearShapes.OfType<Flat>())
+                flat.Visible = false;
+            TheWorld.Patch.Position += new Vector3(125, 125, 0);
+            Viewport.Invalidate();
+        }
+
+        void LoadFileToHeightField(string filename)
+        {
+            float[,] heightMap;
+            int width, height;
+            using (var stream = File.Open(filename, FileMode.Open))
+            {
+                var tiffDecoder = new TiffBitmapDecoder(
+                    stream,
+                    BitmapCreateOptions.PreservePixelFormat | BitmapCreateOptions.IgnoreImageCache,
+                    BitmapCacheOption.None);
+                //stream.Dispose();
+
+                BitmapSource firstFrame = tiffDecoder.Frames[0];
+
+                width = firstFrame.PixelWidth;
+                height = firstFrame.PixelHeight;
+                var buf = new byte[width * height * bytesPerPixel];
+                firstFrame.CopyPixels(buf, width * bytesPerPixel, 0);
+
+                heightMap = new float[width, height];
+                Buffer.BlockCopy(buf, 0, heightMap, 0, buf.Length);
+            }
+
+            float maxz = float.MinValue;
+            float minz = float.MaxValue;
+            for (var i = 0; i < width; i++)
+                for (var j = 0; j < height; j++)
+                {
+                    var v = heightMap[i, j];
+                    if (v > maxz) maxz = v;
+                    if (v < minz) minz = v;
+                }
+            Console.WriteLine(@"max={0} min={1}", maxz, minz);
+
+            TheTerrain = new Terrain
+            {
+                HeightMap = heightMap,
+                Box = new BoundingBox(-250f, 250f, -250f, 250f, 0f, maxz - minz),
+                MinPZ = minz,
+                MaxPZ = maxz,
+                MinPX = 0f,
+                MaxPX = 500f,
+                MinPY = 0f,
+                MaxPY = 500f
+            };
+            Console.WriteLine(@"Loaded.");
+        }
+
+        private void open400X400ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var filename = @"C:\git\rp_shadows\data\synthetic-lunar-patch.tif";
+            LoadFileToHeightField(filename);
+            TheTerrain = SubsetHeightField(TheTerrain, new Rectangle(0, 0, 400, 400));
+            var patch = new TerrainPatch { TheTerrain = TheTerrain, Bounds = new Rectangle(0, 0, 400, 400) };
+            patch.Load();
+            TheWorld.NearShapes.Add(patch);
+            patch.DrawLines = false;
+            foreach (var flat in TheWorld.NearShapes.OfType<Flat>())
+                flat.Visible = false;
+            Viewport.Invalidate();
+        }
+
+        private Terrain SubsetHeightField(Terrain theTerrain, Rectangle rectangle)
+        {
+            var newMap = new float[rectangle.Width, rectangle.Height];
+            var oldMap = theTerrain.HeightMap;
+            var x1 = rectangle.Left;
+            var y1 = rectangle.Top;
+            var x2 = rectangle.Right;
+            var y2 = rectangle.Bottom;
+            for (var x = rectangle.Left; x < rectangle.Right; x++)
+                for (var y = rectangle.Top; y < rectangle.Bottom; y++)
+                    newMap[x - rectangle.Left, y - rectangle.Top] = oldMap[x, y];
+            float maxz = float.MinValue;
+            float minz = float.MaxValue;
+            for (var i = 0; i < rectangle.Width; i++)
+                for (var j = 0; j < rectangle.Height; j++)
+                {
+                    var v = newMap[i, j];
+                    if (v > maxz) maxz = v;
+                    if (v < minz) minz = v;
+                }
+            var t = new Terrain
+            {
+                HeightMap = newMap,
+                Box = new BoundingBox(0f, theTerrain.Width * theTerrain.GridResolution, -0f, theTerrain.Height * theTerrain.GridResolution, 0f, maxz - minz),
+                MinPZ = minz,
+                MaxPZ = maxz,
+                MinPX = 0f,
+                MaxPX = theTerrain.Width * theTerrain.GridResolution,
+                MinPY = 0f,
+                MaxPY = theTerrain.Height * theTerrain.GridResolution
+            };
+            return t;
+        }
+
+        private void open8X8ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var filename = @"C:\git\rp_shadows\data\synthetic-lunar-patch.tif";
+            LoadFileToHeightField(filename);
+            TheTerrain = SubsetHeightField(TheTerrain, new Rectangle(0, 0, 8, 8));
+            var patch = new TerrainPatch { TheTerrain = TheTerrain, Bounds = new Rectangle(0, 0, 8, 8) };
+            patch.Load();
+            TheWorld.NearShapes.Add(patch);
+            patch.DrawLines = false;
+            foreach (var flat in TheWorld.NearShapes.OfType<Flat>())
+                flat.Visible = false;
+            Viewport.Invalidate();
+        }
+
+        private void addToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            TheWorld.Patch.Position += new Vector3(10, 10, 0);
+            Viewport.Invalidate();
+        }
+
+        private void subtractToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            TheWorld.Patch.Position += new Vector3(-10, -10, 0);
+            Viewport.Invalidate();
+        }
+
+        private void trackBallToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Viewport.CameraMode = new ArcBall(Viewport, TheWorld.CentralBall)
+            {
+                RelativePosition = new Vector3(0f, 100f, 0f)
+            };
+            Viewport.Invalidate();
+        }
+
+        private void joystickToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var m = new JoystickCamera(Viewport, TheWorld.CentralBall)
+            {
+                Eye = new Vector3(10, 10, 3)
+            };
+            m.ResetVectors();
+            Viewport.CameraMode = m;
+            Viewport.Invalidate();
+        }
     }
 }

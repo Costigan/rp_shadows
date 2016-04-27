@@ -31,15 +31,26 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.open500X500ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.open40X40ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.actionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.subtractToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.cameraModeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.trackBallToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.joystickToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem});
+            this.fileToolStripMenuItem,
+            this.viewToolStripMenuItem,
+            this.actionsToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(723, 24);
@@ -50,6 +61,8 @@
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openToolStripMenuItem,
+            this.open500X500ToolStripMenuItem,
+            this.open40X40ToolStripMenuItem,
             this.toolStripSeparator1,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
@@ -59,19 +72,88 @@
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(153, 22);
             this.openToolStripMenuItem.Text = "&Open GeoTIFF";
+            this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+            // 
+            // open500X500ToolStripMenuItem
+            // 
+            this.open500X500ToolStripMenuItem.Name = "open500X500ToolStripMenuItem";
+            this.open500X500ToolStripMenuItem.Size = new System.Drawing.Size(153, 22);
+            this.open500X500ToolStripMenuItem.Text = "Open 400 x 400";
+            this.open500X500ToolStripMenuItem.Click += new System.EventHandler(this.open400X400ToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(150, 6);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(153, 22);
             this.exitToolStripMenuItem.Text = "E&xit";
+            // 
+            // open40X40ToolStripMenuItem
+            // 
+            this.open40X40ToolStripMenuItem.Name = "open40X40ToolStripMenuItem";
+            this.open40X40ToolStripMenuItem.Size = new System.Drawing.Size(153, 22);
+            this.open40X40ToolStripMenuItem.Text = "Open 8 x 8";
+            this.open40X40ToolStripMenuItem.Click += new System.EventHandler(this.open8X8ToolStripMenuItem_Click);
+            // 
+            // actionsToolStripMenuItem
+            // 
+            this.actionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.addToolStripMenuItem,
+            this.subtractToolStripMenuItem});
+            this.actionsToolStripMenuItem.Name = "actionsToolStripMenuItem";
+            this.actionsToolStripMenuItem.Size = new System.Drawing.Size(59, 20);
+            this.actionsToolStripMenuItem.Text = "&Actions";
+            // 
+            // addToolStripMenuItem
+            // 
+            this.addToolStripMenuItem.Name = "addToolStripMenuItem";
+            this.addToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.addToolStripMenuItem.Text = "Add";
+            this.addToolStripMenuItem.Click += new System.EventHandler(this.addToolStripMenuItem_Click);
+            // 
+            // subtractToolStripMenuItem
+            // 
+            this.subtractToolStripMenuItem.Name = "subtractToolStripMenuItem";
+            this.subtractToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.subtractToolStripMenuItem.Text = "Subtract";
+            this.subtractToolStripMenuItem.Click += new System.EventHandler(this.subtractToolStripMenuItem_Click);
+            // 
+            // viewToolStripMenuItem
+            // 
+            this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.cameraModeToolStripMenuItem});
+            this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
+            this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.viewToolStripMenuItem.Text = "&View";
+            // 
+            // cameraModeToolStripMenuItem
+            // 
+            this.cameraModeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.trackBallToolStripMenuItem,
+            this.joystickToolStripMenuItem});
+            this.cameraModeToolStripMenuItem.Name = "cameraModeToolStripMenuItem";
+            this.cameraModeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.cameraModeToolStripMenuItem.Text = "Camera Mode";
+            // 
+            // trackBallToolStripMenuItem
+            // 
+            this.trackBallToolStripMenuItem.Name = "trackBallToolStripMenuItem";
+            this.trackBallToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.trackBallToolStripMenuItem.Text = "Track Ball";
+            this.trackBallToolStripMenuItem.Click += new System.EventHandler(this.trackBallToolStripMenuItem_Click);
+            // 
+            // joystickToolStripMenuItem
+            // 
+            this.joystickToolStripMenuItem.Name = "joystickToolStripMenuItem";
+            this.joystickToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.joystickToolStripMenuItem.Text = "Joystick";
+            this.joystickToolStripMenuItem.Click += new System.EventHandler(this.joystickToolStripMenuItem_Click);
             // 
             // TerrainViz
             // 
@@ -96,6 +178,15 @@
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem open500X500ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem open40X40ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem actionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem addToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem subtractToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem cameraModeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem trackBallToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem joystickToolStripMenuItem;
     }
 }
 

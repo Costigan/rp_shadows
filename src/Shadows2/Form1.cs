@@ -25,6 +25,8 @@ namespace Shadows2
         public Bitmap Rendering;
         float _azimuth = 90f, _elevation = 0.050f;
 
+        bool UseClipper = true;
+
         public Form1()
         {
             InitializeComponent();
@@ -35,7 +37,7 @@ namespace Shadows2
             _azimuth = trackAzimuth.Value;
             tbAzimuth.Text = string.Format("{0:f3}", _azimuth);
             if (autoUpdateAfterAzElChangeToolStripMenuItem.Checked)
-                UpdateToAzimuthAndElevation();
+                UpdateWithoutClipper();
         }
 
         private void trackElevation_Scroll(object sender, EventArgs e)
@@ -43,7 +45,7 @@ namespace Shadows2
             _elevation = trackElevation.Value / 100f;
             tbElevation.Text = string.Format("{0:f3}", _elevation);
             if (autoUpdateAfterAzElChangeToolStripMenuItem.Checked)
-                UpdateToAzimuthAndElevation();
+                UpdateWithoutClipper();
         }
 
         private void btnUpdateFromAzEl_Click(object sender, EventArgs e)
@@ -316,12 +318,12 @@ namespace Shadows2
 
         private void trackAzimuth_MouseUp(object sender, MouseEventArgs e)
         {
-            UpdateToAzimuthAndElevation();
+            UpdateWithoutClipper();
         }
 
         private void trackElevation_MouseUp(object sender, MouseEventArgs e)
         {
-            UpdateToAzimuthAndElevation();
+            UpdateWithoutClipper();
         }
 
         private void tbScale_ValueChanged(object sender, EventArgs e)
@@ -430,6 +432,13 @@ namespace Shadows2
         private void button2_Click(object sender, EventArgs e)
         {
             UpdateToAzimuthAndElevation(10f, 7);
+        }
+
+        void UpdateWithoutClipper(float rayDensity = 1f, int sunRayVerticalCount = 0, int sunRayHorizontalCount = 0)
+        {
+            UseClipper = false;
+            UpdateToAzimuthAndElevation(rayDensity, sunRayVerticalCount, sunRayHorizontalCount);
+            UseClipper = true;
         }
 
         void UpdateToAzimuthAndElevation(float rayDensity = 1f, int sunRayVerticalCount = 0, int sunRayHorizontalCount = 0)
@@ -542,13 +551,23 @@ namespace Shadows2
             UpdateToAzimuthAndElevation(4f, 10, 2);
         }
 
+        private void open2000X2000ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var filename = @"C:\git\rp_shadows\data\synthetic-lunar-patch.tif";
+            LoadFileToHeightField(filename);
+            TheTerrain = SubsetHeightField(TheTerrain, new Rectangle(0, 0, 2000, 2000));
+            ShowBitmap(TheTerrain.HeightFieldToBitmap(Rendering));
+        }
+
         void UpdateToSun(Vector3d v, float rayDensity = 1f, int sunRayVerticalCount = 0, int sunRayHorizontalCount = 0)
         {
             if (TheTerrain == null) return;
             TheTerrain.Clear();
 
-            TheTerrain.UpdateToSunV3(v, 1f, (float)(0.25d * Math.PI / 180d), rayDensity, sunRayVerticalCount, sunRayHorizontalCount);
-            //TheTerrain.UpdateToSunV4(v, 1f, (float)(0.25d * Math.PI / 180d), rayDensity, sunRayVerticalCount, sunRayHorizontalCount);
+            if (UseClipper)
+                TheTerrain.UpdateToSunV3(v, 1f, (float)(0.25d * Math.PI / 180d), rayDensity, sunRayVerticalCount, sunRayHorizontalCount);
+            else
+                TheTerrain.UpdateToSunV4(v, 1f, (float)(0.25d * Math.PI / 180d), rayDensity, sunRayVerticalCount, sunRayHorizontalCount);
 
             ShowBitmap(TheTerrain.ShadowBufferToScaledImageV4(Rendering));
             Console.WriteLine(@"Done.");

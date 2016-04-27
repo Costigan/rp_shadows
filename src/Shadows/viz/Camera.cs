@@ -117,8 +117,8 @@ namespace Shadow.viz
             for (int i = 0; i < w.TheWorld.FarShapes.Count; i++)
                 w.TheWorld.FarShapes[i].Draw(false, Eye);
 
-            double nearClip = 0.1f;
-            double farClip = 2000f;
+            double nearClip = 0.5f;
+            double farClip = 20000f;
 
             GL.Clear(ClearBufferMask.DepthBufferBit);
 
@@ -504,6 +504,8 @@ namespace Shadow.viz
 
         private bool _lastGoFast;
         private bool _lastGoSlow;
+        private bool _lastTurnFast;
+        private bool _lastTurnSlow;
 
         private Vector3 _right;
 
@@ -630,6 +632,18 @@ namespace Shadow.viz
             Console.WriteLine(@"WalkSpeed={0}", WalkSpeed);
         }
 
+        public void TurnFaster()
+        {
+            RotateSpeed *= 1.2f;
+            Console.WriteLine(@"Turn faster");
+        }
+
+        public void TurnSlower()
+        {
+            RotateSpeed /= 1.2f;
+            Console.WriteLine(@"Turn slower");
+        }
+
         public void Describe()
         {
             Console.WriteLine(@"Camera info:");
@@ -667,8 +681,8 @@ namespace Shadow.viz
                     Console.WriteLine(@"button3={0}", state.GetButton(JoystickButton.Button3));
                     Console.WriteLine(@"button4={0}", state.GetButton(JoystickButton.Button4));
                     Console.WriteLine(@"button5={0}", state.GetButton(JoystickButton.Button5));
-                    Console.WriteLine(@"button6={0}", state.GetButton(JoystickButton.Button6));
-                    Console.WriteLine(@"button7={0}", state.GetButton(JoystickButton.Button7));
+                    Console.WriteLine(@"button6={0}", state.GetButton(JoystickButton.Button6)); // F3
+                    Console.WriteLine(@"button7={0}", state.GetButton(JoystickButton.Button7)); // F4
                     Console.WriteLine(@"button8={0}", state.GetButton(JoystickButton.Button8));
                     Console.WriteLine(@"button9={0}", state.GetButton(JoystickButton.Button9));
                     Console.WriteLine(@"button10={0}", state.GetButton(JoystickButton.Button10)); // hat up
@@ -693,6 +707,9 @@ namespace Shadow.viz
                 bool reset = state.GetButton(JoystickButton.Button8) == ButtonState.Pressed;
                 bool goSlow = state.GetButton(JoystickButton.Button1) == ButtonState.Pressed;
                 bool goFast = state.GetButton(JoystickButton.Button3) == ButtonState.Pressed;
+                bool turnSlow = state.GetButton(JoystickButton.Button6) == ButtonState.Pressed;
+                bool turnFast = state.GetButton(JoystickButton.Button7) == ButtonState.Pressed;
+
 
                 if (Math.Abs(forward) > 0.1f)
                     MoveForward(-forward * WalkSpeed);
@@ -724,6 +741,13 @@ namespace Shadow.viz
                     SpeedUp();
                 _lastGoSlow = goSlow;
                 _lastGoFast = goFast;
+
+                if (!_lastTurnFast && turnFast)
+                    TurnFaster();
+                if (!_lastTurnSlow && turnSlow)
+                    TurnSlower();
+                _lastTurnFast = turnFast;
+                _lastTurnSlow = turnSlow;
             }
 
             if (false) // this.Focused || GraphicsWindow.Focused)
