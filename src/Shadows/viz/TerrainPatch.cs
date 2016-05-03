@@ -24,6 +24,7 @@ namespace Shadow.viz
         public NormalAverager[] NormalBuffer = new NormalAverager[0];
 
         public ShaderProgram Shader = null;
+        public bool ShowTexture = true;
         public string TextureFilename;
         protected int TextureHandle;
 
@@ -161,7 +162,7 @@ namespace Shadow.viz
             if (ShowAxes)
                 PaintAxes(AxisScale);
 
-            if (Shader != null)
+            if (ShowTexture && Shader != null)
                 Shader.UseProgram();
 
             GL.Color3(Color);
@@ -169,7 +170,7 @@ namespace Shadow.viz
             GL.Material(MaterialFace.Front, MaterialParameter.Shininess, Shininess);
             GL.ShadeModel(ShadingModel.Smooth);
 
-            if (TextureHandle != 0)
+            if (ShowTexture && TextureHandle != 0)
             {
                 GL.Enable(EnableCap.Texture2D);
                 GL.BindTexture(TextureTarget.Texture2D, TextureHandle);
@@ -211,13 +212,13 @@ namespace Shadow.viz
             GL.DisableClientState(ArrayCap.NormalArray);
             GL.DisableClientState(ArrayCap.IndexArray);
 
-            if (TextureHandle != 0)
+            if (ShowTexture && TextureHandle != 0)
             {
                 GL.Disable(EnableCap.Texture2D);
                 GL.BindTexture(TextureTarget.Texture2D, 0);
             }
 
-            if (Shader != null)
+            if (ShowTexture && Shader != null)
                 Shader.StopUsingProgram();
         }
 

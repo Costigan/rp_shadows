@@ -296,9 +296,9 @@ namespace Shadows
                 MinPZ = minz,
                 MaxPZ = maxz,
                 MinPX = 0f,
-                MaxPX = theTerrain.Width * theTerrain.GridResolution,
+                MaxPX = rectangle.Width * theTerrain.GridResolution,
                 MinPY = 0f,
-                MaxPY = theTerrain.Height * theTerrain.GridResolution
+                MaxPY = rectangle.Height * theTerrain.GridResolution
             };
             return t;
         }
@@ -346,6 +346,35 @@ namespace Shadows
             };
             m.ResetVectors();
             Viewport.CameraMode = m;
+            Viewport.Invalidate();
+        }
+
+        private void open2000X2000ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var filename = @"C:\git\rp_shadows\data\synthetic-lunar-patch.tif";
+            LoadFileToHeightField(filename);
+            var r = new Rectangle(0, 0, 2000, 2000);
+            TheTerrain = SubsetHeightField(TheTerrain, r);
+            TheWorld.Patch = new TerrainPatch
+            {
+                TheTerrain = TheTerrain,
+                Bounds = new Rectangle(0, 0, 2000, 2000),
+                TextureFilename = @"C:\git\rp_shadows\data\lightmap-2000x2000-az245el0.14.png",
+                Shader = MoonShaderTexturedPhong
+            };
+            TheWorld.Patch.Load();
+            TheWorld.NearShapes.Add(TheWorld.Patch);
+            TheWorld.Patch.DrawLines = false;
+            foreach (var flat in TheWorld.NearShapes.OfType<Flat>())
+                flat.Visible = false;
+            Viewport.Invalidate();
+        }
+
+        private void showTextureToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            showTextureToolStripMenuItem.Checked = !showTextureToolStripMenuItem.Checked;
+            if (TheWorld.Patch != null)
+                TheWorld.Patch.ShowTexture = showTextureToolStripMenuItem.Checked;
             Viewport.Invalidate();
         }
     }
