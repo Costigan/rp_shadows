@@ -14,7 +14,8 @@ namespace GdalTest
 {
     public partial class Form1 : Form
     {
-        string sample_diff = @"C:\git\rp_shadows\data\synthetic-lunar-patch.tif";
+        //string sample_diff = @"C:\git\rp_shadows\data\synthetic-lunar-patch.tif";
+        string sample_diff = @"C:\RP\maps\Nobile\Andy_Nobile-C3_2020_DSN\ldem_80s_20m.img.DSN.2020-02-14T00-00-00.050.tex.tif";
         public Form1()
         {
             InitializeComponent();

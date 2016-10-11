@@ -36,6 +36,7 @@
             this.open400X400ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.open500X500ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.open1000X1000ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.open2000X2000ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.synthesize10X10ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.synthesize400X400ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -74,7 +75,6 @@
             this.tbAzimuth = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.panel4 = new System.Windows.Forms.Panel();
-            this.open2000X2000ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel2.SuspendLayout();
@@ -159,6 +159,13 @@
             this.open1000X1000ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
             this.open1000X1000ToolStripMenuItem.Text = "Open 1000 x 1000";
             this.open1000X1000ToolStripMenuItem.Click += new System.EventHandler(this.open1000X1000ToolStripMenuItem_Click);
+            // 
+            // open2000X2000ToolStripMenuItem
+            // 
+            this.open2000X2000ToolStripMenuItem.Name = "open2000X2000ToolStripMenuItem";
+            this.open2000X2000ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.open2000X2000ToolStripMenuItem.Text = "Open 2000 x 2000";
+            this.open2000X2000ToolStripMenuItem.Click += new System.EventHandler(this.open2000X2000ToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
@@ -515,13 +522,6 @@
             this.panel4.Name = "panel4";
             this.panel4.Size = new System.Drawing.Size(728, 499);
             this.panel4.TabIndex = 4;
-            // 
-            // open2000X2000ToolStripMenuItem
-            // 
-            this.open2000X2000ToolStripMenuItem.Name = "open2000X2000ToolStripMenuItem";
-            this.open2000X2000ToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
-            this.open2000X2000ToolStripMenuItem.Text = "Open 2000 x 2000";
-            this.open2000X2000ToolStripMenuItem.Click += new System.EventHandler(this.open2000X2000ToolStripMenuItem_Click);
             // 
             // Form1
             // 
