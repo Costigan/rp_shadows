@@ -59,6 +59,7 @@ namespace LightMap
             var widthArg = new ValueArgument<int>('w', "width", "Clip the DEM to this width");
             var heightArg = new ValueArgument<int>('h', "height", "Clip the DEM to this height");
             var estimateTimeArg = new SwitchArgument('e', "estimate", "Estimate the time-per-ray needed to generate this lightmap but don't generate it", false);
+            var superResolution = new ValueArgument<int>('s', "superresolution", "Number of rays per pixel of resolution (1-axis).  Defaults to 1.");
 
             Parser.Arguments.Add(demFilenameArg);
             Parser.Arguments.Add(outputFilenameArg);
@@ -70,6 +71,7 @@ namespace LightMap
             Parser.Arguments.Add(widthArg);
             Parser.Arguments.Add(heightArg);
             Parser.Arguments.Add(estimateTimeArg);
+            Parser.Arguments.Add(superResolution);
 
             try
             {
@@ -93,6 +95,8 @@ namespace LightMap
                     SunRayVerticalCount = areaCountArg.Value;
                     SunRayHorizontalCount = SunRayVerticalCount;
                 }
+                if (superResolution.Parsed)
+                    RayDensity = superResolution.Value;
                 if (widthArg.Parsed)
                     Width = widthArg.Value;
                 if (heightArg.Parsed)
@@ -132,16 +136,17 @@ namespace LightMap
                 // Calculate the sun vector
                 Vector3d sunvec = CalculateSunVector();
 
+                Console.WriteLine(@"Sun vector=[{0}, {1}, {2}]", sunvec.X, sunvec.Y, sunvec.Z);
+
                 var terrain = new Terrain { HeightMap = data };
                 terrain.SetMinMax();
                 terrain.Clear();
 
-                var UseClipper = true;
-                var rayDensity = 1f;
+                var UseClipper = false;
                 if (UseClipper)
-                    terrain.UpdateToSunV3(sunvec, 1f, (float)(0.25d * Math.PI / 180d), rayDensity, SunRayVerticalCount, SunRayHorizontalCount);
+                    terrain.UpdateToSunV3(sunvec, 1f, (float)(0.25d * Math.PI / 180d), RayDensity, SunRayVerticalCount, SunRayHorizontalCount);
                 else
-                    terrain.UpdateToSunV4(sunvec, 1f, (float)(0.25d * Math.PI / 180d), rayDensity, SunRayVerticalCount, SunRayHorizontalCount);
+                    terrain.UpdateToSunV4(sunvec, 1f, (float)(0.25d * Math.PI / 180d), RayDensity, SunRayVerticalCount, SunRayHorizontalCount);
 
                 if (!EstimateTime)
                 {
