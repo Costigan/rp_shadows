@@ -17,9 +17,11 @@ namespace LightMap.raycaster
         const uint HitIncrement =  0x00010001;
         const uint MissIncrement = 0x00000001;
 
-        public void UpdateToSunV4(Vector3d sun1,
+        public void UpdateToSunV4(
+            Vector3d sun1,
             float sunFraction = 1f,
             float sunHalfAngle = (float)(0.25d * Math.PI / 180d),
+            float pixelSize = 1f,
             float rayDensity = 1f,
             int sunRayVerticalCount = 0,
             int sunRayHorizontalCount = 0)
@@ -29,6 +31,13 @@ namespace LightMap.raycaster
             var step = gridResolution / rayDensity;
             var gridCellArea = step * step;
             var sunPosVec = new Vector3((float)sun1.X, (float)sun1.Y, (float)sun1.Z);
+
+            // The units used for DEM height and the DEM grid cells must be the same.  The height is always in meters,
+            // but the grid resolution changes.  To account for different units, I should change how stepping occurs, but
+            // instead, I'm going to adjust the height.  This works because the sun is treated as being at an infinite distance
+            // from the terrain, so there's no perspective for scaling up the height to break.  Height will be multiplied by
+            // this quantity
+            var oneOverPixelSize = 1f / pixelSize;
 
             var ixmax = HeightMap.GetLength(0);
             var iymax = HeightMap.GetLength(1);
@@ -76,14 +85,14 @@ namespace LightMap.raycaster
                 var up = Vector3.Cross(-toSun, cross);
                 var m = Matrix4.LookAt(toSun, origin, up);
 
-                var pz = MinPZ;
+                var pz = oneOverPixelSize * MinPZ;
                 var lastZTransformed = p.X * m.Row0.Y + p.Y * m.Row1.Y + pz * m.Row2.Y + 1f * m.Row3.Y;
                 var ix = (int)((p.X - MinPX) * invGridResolution);
                 var iy = (int)((p.Y - MinPY) * invGridResolution);
 
                 while (ix >= 0 && ix < ixmax && iy >= 0 && iy < iymax)
                 {
-                    pz = InterpolatedHeightMapV4(p.X, p.Y, gridResolution, clipper.Width, clipper.Height);
+                    pz = oneOverPixelSize * InterpolatedHeightMapV4(p.X, p.Y, gridResolution, clipper.Width, clipper.Height);
                     var pzTransformed = p.X * m.Row0.Y + p.Y * m.Row1.Y + pz * m.Row2.Y + 1f * m.Row3.Y;
 
                     // Debugging

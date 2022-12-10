@@ -61,6 +61,9 @@ namespace LightMap
             var estimateTimeArg = new SwitchArgument('e', "estimate", "Estimate the time-per-ray needed to generate this lightmap but don't generate it", false);
             var superResolution = new ValueArgument<int>('s', "superresolution", "Number of rays per pixel of resolution (1-axis).  Defaults to 1.");
 
+            var test = new SwitchArgument('.', "test", "run test", false);
+            var testLength = new ValueArgument<int>('l', "length");
+
             Parser.Arguments.Add(demFilenameArg);
             Parser.Arguments.Add(outputFilenameArg);
             Parser.Arguments.Add(timestampArg);
@@ -72,6 +75,8 @@ namespace LightMap
             Parser.Arguments.Add(heightArg);
             Parser.Arguments.Add(estimateTimeArg);
             Parser.Arguments.Add(superResolution);
+            Parser.Arguments.Add(test);
+            Parser.Arguments.Add(testLength);
 
             try
             {
@@ -102,63 +107,111 @@ namespace LightMap
                 if (heightArg.Parsed)
                     Height = heightArg.Value;
 
-                if (!File.Exists(DEMFilename))
-                    ShowError(string.Format("The DEM {0} file doesn't exist", DEMFilename));
                 if (!ReplaceOutputFile && File.Exists(OutputFilename))
                     ShowError(string.Format("The lightmap file already exists.  Use -o or --overwrite to replace it."));
                 if (estimateTimeArg.Parsed)
                     EstimateTime = estimateTimeArg.Value;
 
-                GdalConfiguration.ConfigureGdal();
-                float[,] data = GetFloatArray();
-                if (data == null)
-                    ShowError(string.Format("Couldn't read float data from {0}", DEMFilename));
+                float nsPixel = 1f;
+                float[,] data;
+                Vector3d sunvec;
 
-                // Clip the terrain if necessary
-                if (Width < 0)
+                if (test.Parsed && test.Value)
                 {
-                    Width = data.GetLength(0);  // Is this right?
-                    Height = data.GetLength(1);
+                    var len = testLength.Parsed ? testLength.Value : 1000;
+                    GenerateTestData(len, out data, out sunvec);
                 }
                 else
                 {
-                    var data2 = new float[Width, Height];
-                    int w = Math.Min(Width, data.GetLength(0));
-                    int h = Math.Min(Height, data.GetLength(1));
-                    for (int y = 0; y < h; y++)
-                        for (int x = 0; x < w; x++)
-                            data2[x, y] = data[x, y];
-                    data = data2;
-                    Width = w;
-                    Height = h;
+                    if (!File.Exists(DEMFilename))
+                        ShowError(string.Format("The DEM {0} file doesn't exist", DEMFilename));
+
+                    GdalConfiguration.ConfigureGdal();
+                    GetDEMFromFile(out data, out nsPixel);
+                    if (data == null)
+                        ShowError(string.Format("Couldn't read float data from {0}", DEMFilename));
+
+                    // Clip the terrain if necessary
+                    if (Width < 0)
+                    {
+                        Width = data.GetLength(0);  // Is this right?
+                        Height = data.GetLength(1);
+                    }
+                    else
+                    {
+                        var data2 = new float[Width, Height];
+                        int w = Math.Min(Width, data.GetLength(0));
+                        int h = Math.Min(Height, data.GetLength(1));
+                        for (int y = 0; y < h; y++)
+                            for (int x = 0; x < w; x++)
+                                data2[x, y] = data[x, y];
+                        data = data2;
+                        Width = w;
+                        Height = h;
+                    }
+
+                    // Calculate the sun vector
+                    sunvec = CalculateSunVector();
                 }
 
-                // Calculate the sun vector
-                Vector3d sunvec = CalculateSunVector();
+                GenerateShadows(data, sunvec, OutputFilename, Math.Abs(nsPixel));
 
-                Console.WriteLine(@"Sun vector=[{0}, {1}, {2}]", sunvec.X, sunvec.Y, sunvec.Z);
-
-                var terrain = new Terrain { HeightMap = data };
-                terrain.SetMinMax();
-                terrain.Clear();
-
-                var UseClipper = false;
-                if (UseClipper)
-                    terrain.UpdateToSunV3(sunvec, 1f, (float)(0.25d * Math.PI / 180d), RayDensity, SunRayVerticalCount, SunRayHorizontalCount);
-                else
-                    terrain.UpdateToSunV4(sunvec, 1f, (float)(0.25d * Math.PI / 180d), RayDensity, SunRayVerticalCount, SunRayHorizontalCount);
-
-                if (!EstimateTime)
-                {
-                    var bitmap = terrain.ShadowBufferToScaledImageV4();
-                    bitmap.Save(OutputFilename);
-                    if (Verbose)
-                        Console.WriteLine(@"Done.");
-                }
             }
             catch (CommandLineException e)
             {
                 Console.WriteLine(e.Message);
+            }
+        }
+
+        private void GenerateTestData(int len, out float[,] data, out Vector3d sunvec)
+        {
+            data = new float[len, len];
+            var heights = new float[] { -1, -2, -3, -4, -5 };
+            var widths = new int[] { 4,8,16 };
+            var instances = 100;
+            var r = new Random();
+            for (var iheight = 0;iheight<heights.Length;iheight++)
+                for (var iwidth = 0;iwidth<widths.Length;iwidth++)
+                    for (var instance =0;instance<instances;instance++)
+                    {
+                        var radius = widths[iwidth];
+                        var height = heights[iheight];
+                        var x = r.Next(len);
+                        var y = r.Next(len);
+                        for (var i=-radius;i<radius;i++)
+                            for (var j=-radius;j<radius;j++)
+                            {
+                                var x1 = x + i;
+                                var y1 = y + j;
+                                if (x1 >= len || y1 >= len) continue;
+                                data[x1, y1] = height;
+                            }
+                    }
+            sunvec = new Vector3d(1, 2, .1);
+            sunvec.Normalize();
+        }
+
+        void GenerateShadows(float[,] data, Vector3d sunvec, string filename, float pixelSize)
+        {
+            Console.WriteLine(@"Sun vector=[{0}, {1}, {2}]", sunvec.X, sunvec.Y, sunvec.Z);
+
+            var terrain = new Terrain { HeightMap = data };
+            terrain.SetMinMax();
+            terrain.Clear();
+
+            //var UseClipper = false;
+            //if (UseClipper)
+            //    terrain.UpdateToSunV3(sunvec, 1f, (float)(0.25d * Math.PI / 180d), RayDensity, SunRayVerticalCount, SunRayHorizontalCount);
+            //else
+
+            terrain.UpdateToSunV4(sunvec, 1f, (float)(0.25d * Math.PI / 180d), pixelSize, RayDensity, SunRayVerticalCount, SunRayHorizontalCount);
+
+            if (!EstimateTime)
+            {
+                var bitmap = terrain.ShadowBufferToScaledImageV4();
+                bitmap.Save(filename);
+                if (Verbose)
+                    Console.WriteLine(@"Done.");
             }
         }
 
@@ -169,7 +222,7 @@ namespace LightMap
             Environment.Exit(-1);
         }
 
-        float[,] GetFloatArray()
+        bool GetDEMFromFile(out float[,] dem, out float pixelSize)
         {
             using (Dataset dataset = Gdal.Open(DEMFilename, Access.GA_ReadOnly))
             {
@@ -182,6 +235,19 @@ namespace LightMap
                 Projection = dataset.GetProjectionRef();
                 AffineTransform = new double[6];
                 dataset.GetGeoTransform(AffineTransform);
+
+                var wePixel = AffineTransform[1];
+                var nsPixel = AffineTransform[5];
+
+                if (Math.Abs(Math.Abs(wePixel)-Math.Abs(nsPixel)) > 0.00001f)
+                {
+                    Console.Error.WriteLine($"The pixels in {DEMFilename} aren't square");
+                    Console.Error.WriteLine($"The west-east pixel   is {wePixel}");
+                    Console.Error.WriteLine($"The north-south picel is {nsPixel}");
+                    Environment.Exit(1);
+                }
+
+                pixelSize = (float)nsPixel;
 
                 Band band = dataset.GetRasterBand(1);
                 int blockX, blockY;
@@ -197,11 +263,13 @@ namespace LightMap
                             band.ReadRaster(0, 0, width, height, pointer, width, height, DataType.GDT_Float32, 0, 0);
                             pinnedData.Free();
                             band.Dispose();
-                            return data;
+                            dem = data;
+                            return true;
                         }
                     case DataType.GDT_Int16:
                     default:
-                        return null;
+                        dem = null;
+                        return false;
                 }
             }
         }
